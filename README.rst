@@ -29,7 +29,77 @@ EVENTS
 Listened
 ********
 
+\*.reachable.mac
+================
+Event reporting that a mac address is reachable from a specific switch/port.
+
+Content
+-------
+
+.. code-block:: python3
+
+    { 'switch': <switch.id>,  # switch identification
+      'port': <port.port_no>,  # port number
+      'reachable_mac': <reachable_mac_address>}  # string with mac address
+
+\*.switch.port.created
+======================
+Event reporting that a port was created/added in the switch/datapath.
+
+Content
+-------
+
+.. code-block:: python3
+
+   { 'switch': <switch.id>,  # switch identification
+     'port': <port.port_no>,  # port number
+     'port_description': {<description of the port>}  # port description dict
+   }
+
+\*.switch.port.modified
+=======================
+Event reporting that a port was modified in the datapath.
+
+Content
+-------
+
+.. code-block:: python3
+
+   { 'switch': <switch.id>,  # switch identification
+     'port': <port.port_no>,  # port number
+     'port_description': {<description of the port>}  # port description dict
+   }
+
+\*.switch.port.deleted
+======================
+Event reporting that a port was deleted from the datapath.
+
+Content
+-------
+
+.. code-block:: python3
+
+   { 'switch': <switch.id>,  # switch identification
+     'port_no': <port.port_no>,  # port number
+     'port_description': {<description of the port>}  # port description dict
+   }
+
 *********
 Generated
 *********
 
+kytos/topology.updated
+======================
+Event reporting that the topology was updated. It contains the most updated
+topology.
+
+The ``topology object`` 
+
+Content
+-------
+
+.. code-block:: python3
+
+    { 'topology': <object>,  # Topology Graph
+      'reachability': <object>  # Map with reachable MACs from Interfaces.
+    }
