@@ -38,9 +38,11 @@ Content
 
 .. code-block:: python3
 
-    { 'switch': <switch.id>,  # switch identification
-      'port': <port.port_no>,  # port number
-      'reachable_mac': <reachable_mac_address>}  # string with mac address
+    {
+        'switch': <switch.id>,  # switch identification
+        'port': <port.port_no>,  # port number
+        'reachable_mac': <reachable_mac_address>
+    }
 
 \*.switch.port.created
 ======================
@@ -51,7 +53,8 @@ Content
 
 .. code-block:: python3
 
-   { 'switch': <switch.id>,  # switch identification
+   {
+     'switch': <switch.id>,  # switch identification
      'port': <port.port_no>,  # port number
      'port_description': {<description of the port>}  # port description dict
    }
@@ -65,7 +68,8 @@ Content
 
 .. code-block:: python3
 
-   { 'switch': <switch.id>,  # switch identification
+   {
+     'switch': <switch.id>,  # switch identification
      'port': <port.port_no>,  # port number
      'port_description': {<description of the port>}  # port description dict
    }
@@ -79,7 +83,8 @@ Content
 
 .. code-block:: python3
 
-   { 'switch': <switch.id>,  # switch identification
+   {
+     'switch': <switch.id>,  # switch identification
      'port_no': <port.port_no>,  # port number
      'port_description': {<description of the port>}  # port description dict
    }
@@ -93,13 +98,14 @@ kytos/topology.updated
 Event reporting that the topology was updated. It contains the most updated
 topology.
 
-The ``topology object`` 
+The ``topology object``.
 
 Content
 -------
 
 .. code-block:: python3
 
-    { 'topology': <object>,  # Topology Graph
-      'reachability': <object>  # Map with reachable MACs from Interfaces.
-    }
+   {
+     'devices': [<list_of_devices>],
+     'links': [<list_of_links_between_interfaces>]
+   }
