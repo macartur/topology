@@ -34,8 +34,11 @@ class Port:
 
     """
 
-    def __init__(self, number=None, mac=None, properties=None, state=None):
+    def __init__(self, number=None, mac=None, properties=None,
+                 state=PortState.UP):
         """Init the port."""
+        if number is None and mac is None:
+            raise PortException('You must pass or the number or the mac.')
         #: Port number
         self.number = number
         #: Port mac address
@@ -43,7 +46,7 @@ class Port:
         #: Dict with port properties , such as speed, bandwith, etc.
         self.properties = properties or {}
         #: Port state, one of PortState enum values.
-        self._state = state or PortState.UP
+        self.state = state
 
     @property
     def id_(self):
@@ -90,11 +93,11 @@ class Device:
         #: Switch or host ID
         self.device_id = device_id
         #: DeviceType
-        self._dtype = dtype
-        #: Dict <port_id_>: <port>
-        self.ports = {}
-        if ports:
-            self.ports.update(ports)
+        self.dtype = dtype
+        #: list of ports (instances of Port)
+        self._ports = {}
+        for port in ports:
+            self.add_port(port)
 
     @property
     def id_(self):
@@ -142,7 +145,7 @@ class Device:
             msg = f'Port {port.id_} already added to the device {self.id_}'
             raise DeviceException(msg)
 
-        self.ports[port.id_] = port
+        self._ports[port.id_] = port
 
     def has_port(self, port):
         """Check if the device have the given port.
@@ -156,10 +159,9 @@ class Device:
             False otherwise.
 
         """
-        try:
-            self.get_port(port)
+        if self.get_port(port):
             return True
-        except PortNotFound:
+        else:
             return False
 
     def get_port(self, port):
@@ -177,11 +179,38 @@ class Device:
         """
         try:
             if isinstance(port, Port):
-                return self.ports[port.id_]
+                return self._ports[port.id_]
             # Assuming that port is the id of a port.
-            return self.ports[port]
-        except KeyError:
+            return self._ports[port]
+        except (KeyError, IndexError) as error:
             return None
+
+    @property
+    def ports(self):
+        """Return the list of current ports."""
+        return list(self._ports.values())
+
+    @ports.setter
+    def ports(self, ports):
+        """Set all ports."""
+        if isinstance(ports, dict):
+            ports = ports.values
+        for port in ports:
+            self.add_port(port)
+
+    @property
+    def ports_ids(self):
+        """Return the list of ports ids."""
+        return list(self._ports.keys())
+
+    def get_interface_for_port(self, port_id):
+        """Return an Interface object for the given port_id.
+
+        Args:
+            port_id (str): Port id.
+
+        """
+        return Interface(self, self.get_port(port_id))
 
 
 class Interface:
