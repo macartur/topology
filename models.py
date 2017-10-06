@@ -1,11 +1,13 @@
 """Most relevant classes to be used on the topology."""
 from enum import Enum, IntEnum, unique
+import json
 
 from napps.kytos.topology.exceptions import (DeviceException, DeviceNotFound,
                                              InterfaceConnected,
                                              InterfaceDisconnected,
-                                             InterfaceException, PortNotFound,
-                                             TopologyException)
+                                             InterfaceException,
+                                             LinkException, PortException,
+                                             PortNotFound, TopologyException)
 
 __all__ = ('Device', 'DeviceType', 'Interface', 'Port', 'PortState',
            'Topology')
@@ -60,6 +62,13 @@ class Port:
         """
         return self.number or ''.join(self.mac.split(':')).lstrip('0')
 
+    @classmethod
+    def from_json(cls, json_data):
+        """Return a Port instance based on a dict/json(str)."""
+        if isinstance(json_data, str):
+            json_data = json.loads(json_data)
+        return cls(**json_data)
+
     @property
     def state(self):
         """State property, accepts one of PortState values."""
@@ -74,6 +83,13 @@ class Port:
             self._state = PortState(value)
         else:
             self._state = PortState[value]
+
+    def to_json(self):
+        """Export the current port as a serializeable dict."""
+        output = dict(vars(self))
+        output['state'] = self.state.value
+        del output['_state']
+        return output
 
 
 class Device:
@@ -203,6 +219,27 @@ class Device:
         """Return the list of ports ids."""
         return list(self._ports.keys())
 
+    def to_json(self):
+        """Export the current device as a serializeable dict."""
+        output = dict(vars(self))
+        output['dtype'] = output['_dtype'].value
+        del output['_dtype']
+        del output['_ports']
+        output['ports'] = [port.to_json() for port in self.ports]
+        return output
+
+    @classmethod
+    def from_json(cls, json_data):
+        """Return a Device instance based on a dict/json(str)."""
+        if isinstance(json_data, str):
+            json_data = json.loads(json_data)
+        ports_jsons = json_data['ports']
+        ports = []
+        for port in ports_jsons:
+            ports.append(Port.from_json(port))
+        json_data['ports'] = ports
+        return cls(**json_data)
+
     def get_interface_for_port(self, port_id):
         """Return an Interface object for the given port_id.
 
@@ -316,6 +353,40 @@ class Interface:
         self._uni = True
         self._nni = False
 
+    def to_json(self):
+        """Export the current interface as a serializeable dict.
+
+        ATTENTION: This method will export device and port IDs only, not the
+        serialized object. So if you want to recreate this interface you will
+        need to create a new Link object passing the device and port correct
+        instances.
+        """
+        output = {
+            'device_id': self.device.id_,
+            'port_id': self.port.id_,
+            'connected': self._connected,
+            'uni': self._uni,
+            'nni': self._nni
+        }
+        return output
+
+    @classmethod
+    def from_json(cls, json_data):
+        """YOU CANNOT RECREATE AN INTERFACE FROM A JSON.
+
+        SINCE AN INTERFACE NEED TO HAVE REFERENCE TO A DEVICE AND A PORT, WE
+        WON'T CREATE THESE INSTANCES, YOU NEED TO GET THEM FROM WHEREVER THEY
+        ARE (TOPOLOGY MUCH PROBABLY) AND THEN CREATE THE NEW INTERFACE. THE
+        OUTPUTTED JSON WILL ONLY HELP YOU BY IDENTIFYING THE DEVICE ID, PORT ID
+        AND THE OTHER STATE INFORMATION SUCH AS CONNECTED, UNI AND NNI.
+
+        Raises:
+            InterfaceException
+
+        """
+
+        raise InterfaceException(Interface.from_json.__doc__)
+
 
 class Link:
     """Represents a link between two devices/ports."""
@@ -360,6 +431,32 @@ class Link:
         self.interface_two.disconnect()
         self.interface_one = None
         self.interface_two = None
+
+    def to_json(self):
+        """Export the current link as a serializeable dict."""
+        output = {
+            'interface_one': self.interface_one.to_json(),
+            'interface_two': self.interface_two.to_json(),
+            'properties': dict(self.properties)
+        }
+        return output
+
+    @classmethod
+    def from_json(cls, json_data):
+        """YOU CANNOT RECREATE A LINK FROM A JSON.
+
+        SINCE A LINK NEED TO HAVE REFERENCE TO TWO INTERFACES, WE
+        WON'T CREATE THESE INSTANCES, YOU NEED TO GET THEM FROM WHEREVER THEY
+        ARE (TOPOLOGY MUCH PROBABLY) AND THEN CREATE THE NEW LINK. THE
+        OUTPUTTED JSON WILL ONLY HELP YOU BY IDENTIFYING THE INTERFACES AND
+        THE LINK PROPERTIES.
+
+        Raises:
+            LinkException
+
+        """
+
+        raise LinkException(Link.from_json.__doc__)
 
 
 class Topology:
@@ -486,3 +583,103 @@ class Topology:
         interface_one.disconnect()
         interface_two.disconnect()
         del self._links[link.id_]
+
+    def preload_topology(self, topology):
+        """Preload a topology.
+
+        This will replace the current topology with the given devices and
+        links.
+
+        If any error is found on the passed devices or links, then we will just
+        abort the operation and restate the topology as it was before this
+        method was called.
+
+        Args:
+            topology (str, dict): dict/json output on the format of
+            Topology.to_json().
+
+        Raises:
+            TopologyException if any error was found.
+
+        """
+        # first we will save the current devices and links.
+        try:
+            obj = Topology.from_json(topology)
+        except (PortException, DeviceException, InterfaceException,
+                LinkException) as exception:
+            raise TopologyException(exception)
+
+        self._links = {link.id_: link for link in obj.links}
+        self._devices = {device.id_: device for device in obj.devices}
+
+    def to_json(self):
+        """Export the current topology as a serializeable dict."""
+        output = {'devices': [], 'links': []}
+        for device in self.devices:
+            output['devices'].append(device.to_json())
+
+        for link in self.links:
+            output['links'].append(link.to_json())
+
+        return output
+
+    def _recreate_interface(self, data):
+        """Recreate and return an interface.
+
+        Args:
+            data (str, dict): dict/json output on the form of
+                interface.to_json() method.
+
+        Returns:
+            Interface instance.
+
+        """
+        device = self.get_device(data['device_id'])
+        port = device.get_port(data['port_id'])
+        interface = Interface(device, port)
+        if data['connected']:
+            interface.connect()
+            if data['uni']:
+                interface.set_as_uni()
+            if data['nni']:
+                interface.set_as_nni()
+        return interface
+
+    @classmethod
+    def from_json(cls, json_data):
+        """Return a Topology instance based on a dict/json(str)."""
+        if isinstance(json_data, str):
+            json_data = json.loads(json_data)
+        obj = cls()
+
+        devices = json_data['devices']
+        for device in devices:
+            obj.add_device(Device.from_json(device))
+
+        links = json_data['links']
+        for link in links:
+            # Creating interface one
+            data_a = link['interface_one']
+            device = obj.get_device(data_a['device_id'])
+            interface_one = device.get_interface_for_port(data_a['port_id'])
+
+            # Creating interface two
+            data_b = link['interface_two']
+            device = obj.get_device(data_b['device_id'])
+            interface_two = device.get_interface_for_port(data_b['port_id'])
+
+            obj.set_link(interface_one, interface_two, link['properties'])
+
+            # Updating interface one UNI/NNI status
+            if data_a['nni']:
+                interface_one.set_as_nni()
+            elif data_a['uni']:
+                interface_one.set_as_uni()
+
+            # Updating interface two UNI/NNI status
+            if data_b['nni']:
+                interface_two.set_as_nni()
+            elif data_b['uni']:
+                interface_two.set_as_uni()
+
+        return obj
