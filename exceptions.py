@@ -1,16 +1,17 @@
 """Exceptions raised by this NApp."""
 
+
 class DeviceException(Exception):
     """Device related exception."""
 
-    def __init__(self, device=None):
+    def __init__(self, message, device=None):
         """Take the parameter to inform the user about the error.
 
         Args:
             device (str, :class:`Device`): The device that was looked for.
 
         """
-        super().__init__()
+        super().__init__(message)
         self.device = device
 
 
@@ -24,14 +25,14 @@ class DeviceNotFound(DeviceException):
 class PortException(Exception):
     """Port related exceptions."""
 
-    def __init__(self, port=None):
+    def __init__(self, message, port=None):
         """Take the parameter to inform the user about the error.
 
         Args:
             port (str, :class:`Port`): The port that was looked for.
 
         """
-        super().__init__()
+        super().__init__(message)
         self.port = port
 
 
@@ -45,7 +46,7 @@ class PortNotFound(PortException):
 class InterfaceException(Exception):
     """Interface related exceptions."""
 
-    def __init__(self, interface=None):
+    def __init__(self, message, interface=None):
         """Take the parameter to inform the user about the error.
 
         Args:
@@ -53,7 +54,7 @@ class InterfaceException(Exception):
                 for.
 
         """
-        super().__init__()
+        super().__init__(message)
         self.interface = interface
 
 
@@ -69,25 +70,25 @@ class InterfaceConnected(InterfaceException):
     """When a forbidden action was performed on a connected interface."""
 
     def __str__(self):
-        msg = f"The interface {self.port} is already connected."
-        return  msg + super().__str__()
+        msg = f"The interface {self.interface.port} is already connected."
+        return msg + super().__str__()
 
 
 class LinkException(Exception):
     """Link related exception."""
 
-    def __init__(self, link=None):
+    def __init__(self, message, link=None):
         """Take the parameter to inform the user about the error.
 
         Args:
             link (str, :class:`Link`): The link that was looked for.
 
         """
-        super().__init__()
+        super().__init__(message)
         self.link = link
 
 
-class LinkNotFound(Exception):
+class LinkNotFound(LinkException):
     """Exception raised when trying to access a link that does not exist."""
 
     def __str__(self):
