@@ -83,6 +83,20 @@ class Main(KytosNApp):
         """
         return json.dumps(self.topology.to_json())
 
+    @listen_to('.*.switch(es)?.new')
+    def handle_new_switch(self, event):
+        """Create a new Device on the Topology.
+
+        Handle the event of a new created switch and instantiate a new Device
+        on the topology.
+
+        """
+        switch = event.content['switch']
+        device = Device(switch.id)
+        self.topology.add_device(device)
+        self.log.debug('Switch %s added to the Topology.', device.id_)
+        self.notify_topology_update()
+
     def notify_topology_update(self):
         """Send an event to notify about updates on the Topology."""
         name = 'kytos.topology.updated'
