@@ -117,6 +117,27 @@ class Main(KytosNApp):
             port.mac = port.properties['mac']
         device.add_port(port)
 
+    @listen_to('.*.switch.port.modified')
+    def handle_port_modified(self, event):
+        """Update port properties based on a Port Modified event."""
+        # Get Switch
+        device = self.topology.get_device(event.content['switch'])
+        if device is None:
+            log.error('Device %s not found.', event.content['switch'])
+            return
+
+        # Get Switch Port
+        port = device.get_port(event.content['port'])
+        if port is None:
+            msg = 'Port %s not found on switch %s. Creating new port.'
+            self.log(msg, event.content['port'], device.id_)
+            self.handle_port_created(event)
+            return
+
+        port.properties = event.content['port_description']
+        if 'mac' in port.properties:
+            port.mac = port.properties['mac']
+
     def notify_topology_update(self):
         """Send an event to notify about updates on the Topology."""
         name = 'kytos.topology.updated'
