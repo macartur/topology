@@ -4,7 +4,8 @@ Manage the network topology
 """
 import json
 
-from kytos.core import KytosNApp, log, rest
+from kytos.core import KytosEvent, KytosNApp, log, rest
+from kytos.core.helpers import listen_to
 
 from napps.kytos.topology.models import Device, Interface, Port, Topology
 from napps.kytos.topology import settings
@@ -81,3 +82,10 @@ class Main(KytosNApp):
 
         """
         return json.dumps(self.topology.to_json())
+
+    def notify_topology_update(self):
+        """Send an event to notify about updates on the Topology."""
+        name = 'kytos.topology.updated'
+        content = self.topology.to_json()
+        event = KytosEvent(name=name, content=content)
+        self.controller.buffer.app.put(event)
