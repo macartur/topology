@@ -138,6 +138,38 @@ class Main(KytosNApp):
         if 'mac' in port.properties:
             port.mac = port.properties['mac']
 
+    @listen_to('.*.switch.port.deleted')
+    def handle_port_deleted(self, event):
+        """Delete a port from a switch.
+
+        It also does the necessary cleanup on the topology.
+
+        """
+        # Get Switch
+        device = self.topology.get_device(event.content['switch'])
+        if device is None:
+            log.error('Device %s not found.', event.content['switch'])
+            return
+
+        # Get Switch Port
+        port = device.get_port(event.content['port'])
+        if port is None:
+            msg = 'Port %s not found on switch %s. Nothing to delete.'
+            self.log(msg, event.content['port'], device.id_)
+            return
+
+        # Create the interface object
+        interface = Interface(device, port)
+
+        # Get Link from Interface
+        link = self.topology.get_link(interface)
+
+        # Destroy the link
+        self.topology.uset_link(link)
+
+        # Remove the port
+        device.remove_port(port)
+
     def notify_topology_update(self):
         """Send an event to notify about updates on the Topology."""
         name = 'kytos.topology.updated'
