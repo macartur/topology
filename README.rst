@@ -29,22 +29,20 @@ EVENTS
 Listened
 ********
 
-\*.reachable.mac
-================
-Event reporting that a mac address is reachable from a specific switch/port.
+.*.switch(es)?.new
+==================
+Event reporting that a new switch was created/added on the network.
 
 Content
 -------
 
 .. code-block:: python3
 
-    {
-        'switch': <switch.id>,  # switch identification
-        'port': <port.port_no>,  # port number
-        'reachable_mac': <reachable_mac_address>
-    }
+   {
+     'switch': <Switch object>  # kytos.core.switch.Switch class
+   }
 
-\*.switch.port.created
+.*.switch.port.created
 ======================
 Event reporting that a port was created/added in the switch/datapath.
 
@@ -54,12 +52,12 @@ Content
 .. code-block:: python3
 
    {
-     'switch': <switch.id>,  # switch identification
-     'port': <port.port_no>,  # port number
+     'switch': <switch id>,
+     'port': <port number>,
      'port_description': {<description of the port>}  # port description dict
    }
 
-\*.switch.port.modified
+.*.switch.port.modified
 =======================
 Event reporting that a port was modified in the datapath.
 
@@ -69,12 +67,12 @@ Content
 .. code-block:: python3
 
    {
-     'switch': <switch.id>,  # switch identification
-     'port': <port.port_no>,  # port number
+     'switch': <switch id>,
+     'port': <port number>,
      'port_description': {<description of the port>}  # port description dict
    }
 
-\*.switch.port.deleted
+.*.switch.port.deleted
 ======================
 Event reporting that a port was deleted from the datapath.
 
@@ -84,10 +82,39 @@ Content
 .. code-block:: python3
 
    {
-     'switch': <switch.id>,  # switch identification
-     'port_no': <port.port_no>,  # port number
+     'switch': <switch id>,
+     'port': <port number>,
      'port_description': {<description of the port>}  # port description dict
    }
+
+.*.interface.is.nni
+===================
+Event reporting that a interface is a NNI interface.
+
+Content
+-------
+
+.. code-block:: python3
+
+   {
+     'switch': <switch id>,
+     'port': <port number>
+   }
+
+.*.reachable.mac
+================
+Event reporting that a mac address is reachable from a specific switch/port.
+
+Content
+-------
+
+.. code-block:: python3
+
+    {
+        'switch': <switch id>,
+        'port': <port number>,
+        'reachable_mac': <mac address>
+    }
 
 *********
 Generated
