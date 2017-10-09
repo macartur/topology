@@ -97,6 +97,26 @@ class Main(KytosNApp):
         self.log.debug('Switch %s added to the Topology.', device.id_)
         self.notify_topology_update()
 
+    @listen_to('.*.switch.port.created')
+    def handle_port_created(self, event):
+        """Listen an event and create the respective port, if needed."""
+        device = self.topology.get_device(event.content['switch'])
+        if device is None:
+            return
+
+        port = device.get_port(event.content['port'])
+        if port is not None:
+            msg = 'The port %s already exists on the switch %s. '
+            msg += 'It cannot be created again.'
+            log.debug(msg, event.content['port'], device.id_)
+            return
+
+        port = Port(number=event.content['port'])
+        port.properties = event.content['port_description']
+        if 'mac' in port.properties:
+            port.mac = port.properties['mac']
+        device.add_port(port)
+
     def notify_topology_update(self):
         """Send an event to notify about updates on the Topology."""
         name = 'kytos.topology.updated'
