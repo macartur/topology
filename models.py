@@ -163,6 +163,18 @@ class Device:
 
         self._ports[port.id_] = port
 
+    def remove_port(self, port):
+        """Remove a port from current device.
+
+        Args:
+            port (Port): The instance of Port to be removed.
+
+        """
+        try:
+            del self._ports[port.id_]
+        except KeyError:
+            pass
+
     def has_port(self, port):
         """Check if the device have the given port.
 
