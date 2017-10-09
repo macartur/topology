@@ -170,6 +170,44 @@ class Main(KytosNApp):
         # Remove the port
         device.remove_port(port)
 
+    @listen_to('.*.interface.is.nni')
+    def set_interface_as_nni(self, event):
+        """Set an existing interface as NNI (and the interface linked to it).
+
+        If the interface is already a NNI, then nothing is done.
+        If the interface was not set as NNI, then it will be set and also an
+        'kytos.topology.updated' event will be raised.
+        Args:
+            event (KytosEvent): a dict with switch id and port number.
+
+        """
+        # Get Switch
+        switch = self.topology.get_device(event.content['switch'])
+        if switch is None:
+            return
+
+        # Get Switch Port
+        port = switch.get_port(event.content['port'])
+        if port is None:
+            return
+
+        # Create the interface object
+        interface = Interface(switch, port)
+
+        # Get Link from Interface
+        link = self.topology.get_link(interface)
+        if link is None:
+            return
+
+        # If both interfaces are set as NNI, there is nothing to be done.
+        if link.interface_one.is_nni() and link.interface_two.is_nni():
+            return
+
+        # Update interfaces from link as NNI
+        link.interface_one.set_as_nni()
+        link.interface_two.set_as_nni()
+        self.notify_topology_update()
+
     def notify_topology_update(self):
         """Send an event to notify about updates on the Topology."""
         name = 'kytos.topology.updated'
