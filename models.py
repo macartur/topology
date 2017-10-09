@@ -513,16 +513,18 @@ class Topology:
         if link:
             self.unset_link(link)
 
-    def add_device(self, device):
+    def add_device(self, new_device):
         """Add a device to the topology known devices.
 
         Args:
             device (Device): One Device instance.
 
         """
-        if not isinstance(device, Device):
+        if not isinstance(new_device, Device):
             raise Exception('Device must be an instance of Device.')
-        self._devices[device.id_] = device
+        old_device = self.get_device(new_device)
+        if old_device is None:
+            self._devices[device.id_] = device
 
     @property
     def devices(self):
