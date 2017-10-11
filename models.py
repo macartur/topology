@@ -37,7 +37,7 @@ class Port:
     """
 
     def __init__(self, number=None, mac=None, properties=None,
-                 state=PortState.UP):
+                 state=PortState.UP, alias=None):
         """Init the port."""
         if number is None and mac is None:
             raise PortException('You must pass or the number or the mac.')
@@ -49,6 +49,8 @@ class Port:
         self.properties = properties or {}
         #: Port state, one of PortState enum values.
         self.state = state
+        #: user defined alias
+        self.alias = alias
 
     @property
     def id_(self):
@@ -60,7 +62,12 @@ class Port:
             Port ID (string).
 
         """
-        return self.number or ''.join(self.mac.split(':')).lstrip('0')
+        if self.alias:
+            return self.alias
+        elif self.number:
+            return self.number
+
+        return ''.join(self.mac.split(':')).lstrip('0')
 
     @classmethod
     def from_json(cls, json_data):
@@ -104,7 +111,8 @@ class Device:
 
     """
 
-    def __init__(self, device_id, dtype=DeviceType.SWITCH, ports=None):
+    def __init__(self, device_id, dtype=DeviceType.SWITCH, ports=None,
+                 alias=None, properties=None):
         """Instantiate a device."""
         #: Switch or host ID
         self.device_id = device_id
@@ -115,11 +123,15 @@ class Device:
         ports = ports or []
         for port in ports:
             self.add_port(port)
+        #: user defined alias
+        self.alias = alias
+        #: Switch properties dict, such as SB Protocol
+        self.properties = properties or {}
 
     @property
     def id_(self):
         """Return the device_id as the device id."""
-        return self.device_id
+        return self.alias or self.device_id
 
     @property
     def dtype(self):
