@@ -177,10 +177,20 @@ class Main(KytosNApp):
     def set_link(self, event):
         """Set a new link if needed."""
         device_a = self.topology.get_device(event.content['switch'])
+
+        if device_a is None:
+            device_a = Device(event.content['switch'])
+            self.topology.add_device(device_a)
+
         if not device_a.has_port(event.content['port']):
             port = Port(number=event.content['port'])
             device_a.add_port(port)
+
         interface_a = device_a.get_interface_for_port(event.content['port'])
+
+        link = self.topology.get_link(interface_a)
+        if link is not None:
+            return
 
         # Try getting one interface for that specific mac.
         mac = event.content['reachable_mac']
@@ -208,38 +218,58 @@ class Main(KytosNApp):
         If the interface was not set as NNI, then it will be set and also an
         'kytos.topology.updated' event will be raised.
         Args:
-            event (KytosEvent): a dict with switch id and port number.
+            event (KytosEvent): a dict with interface_a and interface_b keys,
+                each one containing switch id and port number.
 
         """
-        # Get Switch
-        switch = self.topology.get_device(event.content['switch'])
-        if switch is None:
-            return
+        interface_a = event.content['interface_a']
+        interface_b = event.content['interface_b']
 
-        # Get Switch Port
-        port = switch.get_port(event.content['port'])
-        if port is None:
-            return
+        # Get Switch A
+        switch_a = self.topology.get_device(interface_a['switch'])
+        if switch_a is None:
+            switch_a = Device(switch_a)
+            self.topology.add_device(switch_a)
 
-        # Create the interface object
-        interface = Interface(switch, port)
+        # Get Port A
+        port_a = switch_a.get_port(interface_a['port'])
+        if port_a is None:
+            port_a = Port(interface_a['port'])
+            switch_a.add_port(port_a)
+
+        # Interface A
+        interface_a = Interface(switch_a, port_a)
+
+        # Get Switch B
+        switch_b = self.topology.get_device(interface_b['switch'])
+        if switch_b is None:
+            switch_b = Device(switch_b)
+            self.topology.add_device(switch_b)
+
+        # Get Port B
+        port_b = switch_b.get_port(interface_b['port'])
+        if port_b is None:
+            port_b = Port(interface_b['port'])
+            switch_b.add_port(port_b)
+
+        # Interface A
+        interface_b = Interface(switch_b, port_b)
 
         # Get Link from Interface
-        link = self.topology.get_link(interface)
-        if link is None:
+        link_a = self.topology.get_link(interface_a)
+        link_b = self.topology.get_link(interface_b)
+
+        if link_a is not None and link_a is link_b:
             return
 
-        # If both interfaces are set as NNI, there is nothing to be done.
-        if link.interface_one.is_nni() and link.interface_two.is_nni():
-            return
+        link = self.topology.set_link(interface_a, interface_b, force=True)
+        link.set_nnis()
 
         # Update interfaces from link as NNI
-        link.interface_one.set_as_nni()
-        link.interface_two.set_as_nni()
         self.notify_topology_update()
 
     def notify_topology_update(self):
         """Send an event to notify about updates on the Topology."""
-        name = 'kytos.topology.updated'
+        name = 'kytos/topology.updated'
         event = KytosEvent(name=name, content={'topology': self.topology})
         self.controller.buffers.app.put(event)

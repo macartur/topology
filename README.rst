@@ -89,7 +89,7 @@ Content
 
 .*.interface.is.nni
 ===================
-Event reporting that a interface is a NNI interface.
+Event reporting that two interfaces were identified as NNI interfaces.
 
 Content
 -------
@@ -97,8 +97,14 @@ Content
 .. code-block:: python3
 
    {
-     'switch': <switch id>,
-     'port': <port number>
+     'interface_a': {
+        'switch': <switch id>,
+        'port': <port number>
+     },
+     'interface_b': {
+        'switch': <switch id>,
+        'port': <port number>
+     }
    }
 
 .*.reachable.mac
