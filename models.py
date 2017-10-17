@@ -458,6 +458,11 @@ class Link:
         """
         return f'{self.interface_one.id_}-{self.interface_two.id_}'
 
+    def set_nnis(self):
+        """Set link interfaces as NNIs."""
+        self.interface_one.set_as_nni()
+        self.interface_two.set_as_nni()
+
     def unlink(self):
         """Unlink the interfaces."""
         self.interface_one.disconnect()
@@ -608,6 +613,7 @@ class Topology:
         link = Link(interface_one, interface_two, properties)
 
         self._links[link.id_] = link
+        return link
 
     def unset_link(self, link):
         """Unset a link."""
