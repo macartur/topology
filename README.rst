@@ -29,7 +29,7 @@ EVENTS
 Listened
 ********
 
-.*.switch(es)?.new
+.*.switch.new
 ==================
 Event reporting that a new switch was created/added on the network.
 

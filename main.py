@@ -84,7 +84,7 @@ class Main(KytosNApp):
         """
         return json.dumps(self.topology.to_json())
 
-    @listen_to('.*.switch(es)?.new')
+    @listen_to('.*.switch.new')
     def handle_new_switch(self, event):
         """Create a new Device on the Topology.
 
