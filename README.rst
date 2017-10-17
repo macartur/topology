@@ -133,8 +133,7 @@ Content
 .. code-block:: python3
 
    {
-     'devices': [<list_of_devices>],
-     'links': [<list_of_links_between_interfaces>]
+     'topology': <Topology object>
    }
 
 ########
