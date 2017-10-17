@@ -272,7 +272,9 @@ class Device:
             port_id (str): Port id.
 
         """
-        return Interface(self, self.get_port(port_id))
+        if self.has_port(port_id):
+            return Interface(self, self.get_port(port_id))
+        return None
 
 
 class Interface:
@@ -436,7 +438,7 @@ class Link:
 
         self.interface_one = interface_one
         self.interface_two = interface_two
-        self.properties = properties
+        self.properties = properties or {}
 
         self.interface_one.connect()
         self.interface_two.connect()
