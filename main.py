@@ -173,6 +173,33 @@ class Main(KytosNApp):
         # Remove the port
         device.remove_port(port)
 
+    @listen_to('.*.reachable.mac')
+    def set_link(self, event):
+        """Set a new link if needed."""
+        device_a = self.topology.get_device(event.content['switch'])
+        if not device_a.has_port(event.content['port']):
+            port = Port(number=event.content['port'])
+            device_a.add_port(port)
+        interface_a = device_a.get_interface_for_port(event.content['port'])
+
+        # Try getting one interface for that specific mac.
+        mac = event.content['reachable_mac']
+        device_b = None
+        interface_b = None
+        for device in self.topology.devices:
+            for port in device.ports:
+                if port.mac == mac:
+                    interface_b = device.get_interface_for_port(port)
+
+        if interface_b is None:
+            device_b = Device(mac, dtype=DeviceType.HOST)
+            port = Port(mac=mac)
+            device_b.add_port(port)
+            self.topology.add_device(device_b)
+            interface_b = Interface(device_b, port)
+
+        self.topology.set_link(interface_a, interface_b)
+
     @listen_to('.*.interface.is.nni')
     def set_interface_as_nni(self, event):
         """Set an existing interface as NNI (and the interface linked to it).
