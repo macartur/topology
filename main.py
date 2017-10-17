@@ -7,7 +7,8 @@ import json
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 
-from napps.kytos.topology.models import Device, Interface, Port, Topology
+from napps.kytos.topology.models import (Device, DeviceType, Interface, Port,
+                                         Topology)
 from napps.kytos.topology import settings
 
 
@@ -167,7 +168,7 @@ class Main(KytosNApp):
         link = self.topology.get_link(interface)
 
         # Destroy the link
-        self.topology.uset_link(link)
+        self.topology.unset_link(link)
 
         # Remove the port
         device.remove_port(port)
