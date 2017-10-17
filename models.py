@@ -94,7 +94,7 @@ class Port:
     def to_json(self):
         """Export the current port as a serializeable dict."""
         output = dict(vars(self))
-        output['state'] = self.state.value
+        output['state'] = self.state.name
         del output['_state']
         return output
 
@@ -247,7 +247,7 @@ class Device:
     def to_json(self):
         """Export the current device as a serializeable dict."""
         output = dict(vars(self))
-        output['dtype'] = output['_dtype'].value
+        output['dtype'] = output['_dtype'].name
         del output['_dtype']
         del output['_ports']
         output['ports'] = [port.to_json() for port in self.ports]
@@ -442,6 +442,12 @@ class Link:
 
         self.interface_one.connect()
         self.interface_two.connect()
+
+        if not self.interface_one.is_nni():
+            self.interface_one.set_as_uni()
+
+        if not self.interface_two.is_nni():
+            self.interface_two.set_as_uni()
 
     @property
     def id_(self):
