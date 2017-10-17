@@ -115,6 +115,8 @@ class Main(KytosNApp):
         port.properties = event.content['port_description']
         if 'mac' in port.properties:
             port.mac = port.properties['mac']
+        if 'alias' in port.properties and port.properties['alias']:
+            port.alias = port.properties['alias']
         device.add_port(port)
 
     @listen_to('.*.switch.port.modified')
