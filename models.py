@@ -112,6 +112,7 @@ class Device:
         self.dtype = dtype
         #: list of ports (instances of Port)
         self._ports = {}
+        ports = ports or []
         for port in ports:
             self.add_port(port)
 
@@ -524,17 +525,17 @@ class Topology:
             raise Exception('Device must be an instance of Device.')
         old_device = self.get_device(new_device)
         if old_device is None:
-            self._devices[device.id_] = device
+            self._devices[new_device.id_] = new_device
 
     @property
     def devices(self):
         """Return all current devices."""
-        return self._devices
+        return list(self._devices.items())
 
     @property
     def links(self):
         """Return all current links."""
-        return self._links
+        return list(self._links.items())
 
     @staticmethod
     @devices.setter
