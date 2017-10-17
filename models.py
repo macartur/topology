@@ -537,16 +537,14 @@ class Topology:
         """Return all current links."""
         return list(self._links.items())
 
-    @staticmethod
     @devices.setter
-    def devices(value):
+    def devices(self, value):
         """Overriding devices attribute to avoid direct usage."""
         msg = f'To add or change devices use the proper methods. {value}'
         raise TopologyException(msg)
 
-    @staticmethod
     @links.setter
-    def links(value):
+    def links(self, value):
         """Overriding links attribute to avoid direct usage."""
         msg = f'To add or change links use the proper methods. {value}'
         raise TopologyException(msg)
