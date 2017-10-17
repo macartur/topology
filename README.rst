@@ -21,8 +21,17 @@ repository. To install this NApp, run:
 
    $ kytos napps install kytos/topology
 
+###########
+Configuring
+###########
+
+You can preload your topology by defining, on the `settings.py` file, the
+variable `PRELOAD_TOPOLOGY_PATH` with the path of the *json* file you wish to
+preload. The format of this json must follow the structure of the
+Topology.to_json() method.
+
 ######
-EVENTS
+Events
 ######
 
 ********

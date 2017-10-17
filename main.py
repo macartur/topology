@@ -3,6 +3,7 @@
 Manage the network topology
 """
 import json
+from pathlib import Path
 
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
@@ -19,30 +20,25 @@ class Main(KytosNApp):
     """
 
     def setup(self):
-        """Replace the '__init__' method for the KytosNApp subclass.
-
-        The setup method is automatically called by the controller when your
-        application is loaded.
-
-        So, if you have any setup routine, insert it here.
-        """
+        """Initiate a new topology and preload configurations."""
         self.topology = Topology()
+        topology_json = settings.PRELOAD_TOPOLOGY_PATH
+        if Path(topology_json.exists()):
+            with open(Path(topology_json), 'r') as data:
+                data = json.loads(data.read())
+                try:
+                    self.topology = Topology.from_json(data)
+                except Exception:
+                    self.topology = Topology()
+        else:
+            self.topology = Topology()
 
     def execute(self):
-        """Execute right after the setup method execution.
-
-        You can also use this method in loop mode if you add to the above setup
-        method a line like the following example:
-
-            self.execute_as_loop(30)  # 30-second interval.
-        """
+        """Do nothing."""
         pass
 
     def shutdown(self):
-        """Execute when your napp is unloaded.
-
-        If you have some cleanup procedure, insert it here.
-        """
+        """Do nothing."""
         log.info('NApp kytos/topology shutting down.')
 
     @rest('devices')
