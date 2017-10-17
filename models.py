@@ -542,12 +542,12 @@ class Topology:
     @property
     def devices(self):
         """Return all current devices."""
-        return list(self._devices.items())
+        return list(self._devices.values())
 
     @property
     def links(self):
         """Return all current links."""
-        return list(self._links.items())
+        return list(self._links.values())
 
     @devices.setter
     def devices(self, value):

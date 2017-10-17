@@ -94,7 +94,7 @@ class Main(KytosNApp):
         switch = event.content['switch']
         device = Device(switch.id)
         self.topology.add_device(device)
-        self.log.debug('Switch %s added to the Topology.', device.id_)
+        log.debug('Switch %s added to the Topology.', device.id_)
         self.notify_topology_update()
 
     @listen_to('.*.switch.port.created')
@@ -130,7 +130,7 @@ class Main(KytosNApp):
         port = device.get_port(event.content['port'])
         if port is None:
             msg = 'Port %s not found on switch %s. Creating new port.'
-            self.log(msg, event.content['port'], device.id_)
+            log(msg, event.content['port'], device.id_)
             self.handle_port_created(event)
             return
 
@@ -155,7 +155,7 @@ class Main(KytosNApp):
         port = device.get_port(event.content['port'])
         if port is None:
             msg = 'Port %s not found on switch %s. Nothing to delete.'
-            self.log(msg, event.content['port'], device.id_)
+            log(msg, event.content['port'], device.id_)
             return
 
         # Create the interface object
@@ -212,4 +212,4 @@ class Main(KytosNApp):
         """Send an event to notify about updates on the Topology."""
         name = 'kytos.topology.updated'
         event = KytosEvent(name=name, content={'topology': self.topology})
-        self.controller.buffer.app.put(event)
+        self.controller.buffers.app.put(event)
