@@ -2,124 +2,55 @@ openapi: 3.0.0
 info:
   title: kytos/topology
   version: 0.0.1
-  description: "**Warning**: *This documentation is experimental and will change soon.*\n
-
-  Keeps track of nodes and links in the network."
-
+  description: Manage the network topology.
 paths:
-
-  /api/kytos/topology:
+  /api/kytos/topology/devices:
     get:
-      summary: Return full topology.
+      summary: Return a json with all the devices in the topology.
+      description: Responsible for the /api/kytos/topology/devices endpoint. e.g. [<list of devices>] Returns: string: json with all the devices in the topology
+      parameters:  # If you have parameters in the URL
+        - name: Parameter's name as in path.
+          required: true
+          description: Describe parameter here
+          in: path
       responses:
-        200:
-          description: Return a JSON with all the nodes and links in the topology.
+        200:  # You can add more responses
+          description: Describe a successful call.
           content:
-            application/json:
+            application/json:  # You can also use text/plain, for example
               schema:
-                type: array
-                description: List of Nodes and Links avaliable in the network
-                items:
-                  $ref: '#/definitions/topology_element'
-
-  /api/kytos/topology/nodes:
-    get:
-      summary: Return a JSON with all the nodes in the topology.
-      responses:
-        200:
-          description: Return a json with all the nodes in the topology.
-          content:
-            application/json:
-              schema:
-                type: array
-                description: List of Nodes avaliable in the network
-                items:
-                  $ref: '#/definitions/Node'
-
+                type: object  # Adapt to your response
+                properties:
+                  prop_one:
+                    type: string
+                    description: Meaning of prop_one
+                    example: an example of prop_one
+                  second_prop:
+                    type: integer
+                    description: Meaning of second_prop
+                    example: 42
   /api/kytos/topology/links:
     get:
-      summary: Return a JSON with all the links in the topology.
+      summary: Return a json with all the links in the topology.
+      description: Responsible for the /api/kytos/topology/links endpoint. Returns: string: json with all the links in the topology.
+      parameters:  # If you have parameters in the URL
+        - name: Parameter's name as in path.
+          required: true
+          description: Describe parameter here
+          in: path
       responses:
-        200:
-          description: Return a json with all the links in the topology.
+        200:  # You can add more responses
+          description: Describe a successful call.
           content:
-            application/json:
+            application/json:  # You can also use text/plain, for example
               schema:
-                type: array
-                description: List of Links avaliable in the network
-                items:
-                  $ref: '#/definitions/Link'
-
-definitions:
-  topology_element:
-    oneOf:
-    - $ref: '#/definitions/Node'
-    - $ref: '#/definitions/Link'
-  Node:
-    type: object
-    description: Node represents a device in the network
-    properties:
-      device_id:
-        type: string
-        description: Device identifier
-      dtype:
-        type: interger
-        description: Device Types
-      ports:
-        type: array
-        description: List of ports
-        items:
-          $ref: '#/definitions/Port'
-
-  Port:
-    type: object
-    description: Port represents a device port connected in the network
-    properties:
-      number:
-        type: string
-        description: Port number
-      mac:
-        type: string
-        description: Port Mac address
-      properties:
-        type: object
-        description: Dict with port properties , such as speed, bandwith, etc.
-      state:
-        type: integer
-        description: Port state, one of PortState enum values.
-
-  Link:
-    type: object
-    properties:
-      interface_one:
-        type: object
-        description: The first interface.
-        oneOf:
-        - $ref: '#/definitions/Interface'
-      interface_two:
-        type: object
-        description: The second interface.
-        oneOf:
-        - $ref: '#/definitions/Interface'
-      properties:
-        type: object
-        description: Dict with port properties, such as speed, bandwith, etc.
-
-  Interface:
-    type: object
-    properties:
-      device_id:
-        type: string
-        description: Device identifier
-      port_id:
-        type: string
-        description: Port Identifier
-      connected:
-        type: boolean
-        description: Show True if the node is connected otherwise False
-      uni:
-        type: boolean
-        description: True if this interface is UNI otherwise False
-      nni:
-        type: boolean
-        description: True if this interface is NNI otherwise False
+                type: object  # Adapt to your response
+                properties:
+                  prop_one:
+                    type: string
+                    description: Meaning of prop_one
+                    example: an example of prop_one
+                  second_prop:
+                    type: integer
+                    description: Meaning of second_prop
+                    example: 42

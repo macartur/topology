@@ -35,7 +35,7 @@ class Main(KytosNApp):
         log.info('NApp kytos/topology shutting down.')
 
     @rest('devices')
-    def get_device(self):
+    def get_devices(self):
         """Return a json with all the devices in the topology.
 
         Responsible for the /api/kytos/topology/devices endpoint.
@@ -46,8 +46,8 @@ class Main(KytosNApp):
             string: json with all the devices in the topology
 
         """
-        return json.dumps([device.to_json()
-                           for device in self.topology.devices])
+        output = {d.id: d.as_dict() for d in self.topology.devices}
+        return json.dumps(output)
 
     @rest('links')
     def get_links(self):
@@ -59,11 +59,11 @@ class Main(KytosNApp):
             string: json with all the links in the topology.
 
         """
-        return json.dumps([link.to_json() for link in self.topology.links])
+        return json.dumps(self.topology.links)
 
     @rest('')
     def get_topology(self):
-        """Return full topology.
+        """Return the latest known topology.
 
         Responsible for the /api/kytos/topology endpoint.
 
@@ -77,9 +77,8 @@ class Main(KytosNApp):
     def handle_new_switch(self, event):
         """Create a new Device on the Topology.
 
-        Handle the event of a new created switch and instantiate a new Device
-        on the topology.
-
+        Handle the event of a new created switch and update the topology with
+        this new device.
         """
         switch = event.content['switch']
         switch.id_ = switch.id
@@ -87,68 +86,29 @@ class Main(KytosNApp):
         log.debug('Switch %s added to the Topology.', switch.id)
         self.notify_topology_update()
 
-    #@listen_to('.*.switch.port.created')
-    #def handle_port_created(self, event):
-    #    """Listen an event and create the respective port, if needed."""
-    #    device = self.topology.get_device(event.content['switch'])
-    #    if device is None:
-    #        return
-
-    #    port = device.get_port(event.content['port'])
-    #    if port is not None:
-    #        msg = 'The port %s already exists on the switch %s. '
-    #        msg += 'It cannot be created again.'
-    #        log.debug(msg, event.content['port'], device.id_)
-    #        return
-
-    #    port = Port(number=event.content['port'])
-    #    port.properties = event.content['port_description']
-    #    if 'mac' in port.properties:
-    #        port.mac = port.properties['mac']
-    #    if 'alias' in port.properties and port.properties['alias']:
-    #        port.alias = port.properties['alias']
-    #    device.add_port(port)
-
     @listen_to('.*.switch.interface.modified')
     def handle_interface_modified(self, event):
-        """Update port properties based on a Port Modified event."""
+        """Update the topology based on a Port Modified event.
+        
+        If a interface is with state down or similar we remove this interface
+        link from the topology.
+        """
         # Get Switch
         interface = event.content['interface']
         # TODO: Fix here
         log.info("**********************")
         log.info(interface)
 
-        #device = self.topology.get_device(event.content['switch'])
-        #if device is None:
-        #    log.error('Device %s not found.', event.content['switch'])
-        #    return
-
-        ## Get Switch Port
-        #port = device.get_port(event.content['port'])
-        #if port is None:
-        #    msg = 'Port %s not found on switch %s. Creating new port.'
-        #    log(msg, event.content['port'], device.id_)
-        #    self.handle_port_created(event)
-        #    return
-
-        #port.properties = event.content['port_description']
-        #if 'mac' in port.properties:
-        #    port.mac = port.properties['mac']
-
     @listen_to('.*.switch.interface.deleted')
     def handle_interface_deleted(self, event):
-        """Delete a port from a switch.
-
-        It also does the necessary cleanup on the topology.
-
-        """
+        """Update the topology based on a Port Delete event."""
         # Get Switch
         interface = event.content['interface']
         self.topology.remove_interface_links(interface.id)
 
     @listen_to('.*.reachable.mac')
     def add_host(self, event):
-        """Set a new link if needed."""
+        """Update the topology with a new Host."""
 
         interface = event.content['port']
         mac = event.content['reachable_mac']
@@ -166,16 +126,7 @@ class Main(KytosNApp):
 
     @listen_to('.*.interface.is.nni')
     def add_links(self, event):
-        """Set an existing interface as NNI (and the interface linked to it).
-
-        If the interface is already a NNI, then nothing is done.
-        If the interface was not set as NNI, then it will be set and also an
-        'kytos.topology.updated' event will be raised.
-        Args:
-            event (KytosEvent): a dict with interface_a and interface_b keys,
-                each one containing switch id and port number.
-
-        """
+        """Update the topology with links related to the NNI interfaces."""
         interface_a = event.content['interface_a']
         interface_b = event.content['interface_b']
 
@@ -194,7 +145,7 @@ class Main(KytosNApp):
         self.notify_topology_update()
 
     def notify_topology_update(self):
-        """Send an event to notify about updates on the Topology."""
+        """Send an event to notify about updates on the topology."""
         name = 'kytos/topology.updated'
         event = KytosEvent(name=name, content={'topology': self.topology})
         self.controller.buffers.app.put(event)
