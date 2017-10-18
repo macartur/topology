@@ -38,13 +38,7 @@ class Main(KytosNApp):
     def get_devices(self):
         """Return a json with all the devices in the topology.
 
-        Responsible for the /api/kytos/topology/devices endpoint.
-
-        e.g. [<list of devices>]
-
-        Returns:
-            string: json with all the devices in the topology
-
+        For now, a device can be a Switch or a Host.
         """
         output = {d.id: d.as_dict() for d in self.topology.devices}
         return json.dumps(output)
@@ -53,23 +47,15 @@ class Main(KytosNApp):
     def get_links(self):
         """Return a json with all the links in the topology.
 
-        Responsible for the /api/kytos/topology/links endpoint.
-
-        Returns:
-            string: json with all the links in the topology.
-
+        Links are directed connections between devices.
         """
         return json.dumps(self.topology.links)
 
-    @rest('')
+    @rest('/')
     def get_topology(self):
         """Return the latest known topology.
 
-        Responsible for the /api/kytos/topology endpoint.
-
-        Returns:
-            string: json with the full topology.
-
+        This topology is updated when there are network events.
         """
         return self.topology.to_json()
 
@@ -89,7 +75,7 @@ class Main(KytosNApp):
     @listen_to('.*.switch.interface.modified')
     def handle_interface_modified(self, event):
         """Update the topology based on a Port Modified event.
-        
+
         If a interface is with state down or similar we remove this interface
         link from the topology.
         """

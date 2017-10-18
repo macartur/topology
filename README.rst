@@ -144,8 +144,6 @@ kytos/topology.updated
 Event reporting that the topology was updated. It contains the most updated
 topology.
 
-The ``topology object``.
-
 Content
 -------
 

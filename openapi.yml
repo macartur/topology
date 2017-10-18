@@ -7,40 +7,26 @@ paths:
   /api/kytos/topology/devices:
     get:
       summary: Return a json with all the devices in the topology.
-      description: Responsible for the /api/kytos/topology/devices endpoint. e.g. [<list of devices>] Returns: string: json with all the devices in the topology
-      parameters:  # If you have parameters in the URL
-        - name: Parameter's name as in path.
-          required: true
-          description: Describe parameter here
-          in: path
+      description: For now, a device can be a Switch or a Host.
       responses:
         200:  # You can add more responses
-          description: Describe a successful call.
+          description: The request has succeeded.
           content:
             application/json:  # You can also use text/plain, for example
               schema:
-                type: object  # Adapt to your response
+                type: object
                 properties:
-                  prop_one:
-                    type: string
-                    description: Meaning of prop_one
-                    example: an example of prop_one
-                  second_prop:
-                    type: integer
-                    description: Meaning of second_prop
-                    example: 42
+                  device_id:
+                    type: object
+                    schema:
+                      $ref: '#/definitions/Device'
   /api/kytos/topology/links:
     get:
       summary: Return a json with all the links in the topology.
-      description: Responsible for the /api/kytos/topology/links endpoint. Returns: string: json with all the links in the topology.
-      parameters:  # If you have parameters in the URL
-        - name: Parameter's name as in path.
-          required: true
-          description: Describe parameter here
-          in: path
+      description: Links are directed connections between devices.
       responses:
         200:  # You can add more responses
-          description: Describe a successful call.
+          description: The request has succeeded.
           content:
             application/json:  # You can also use text/plain, for example
               schema:
@@ -54,3 +40,84 @@ paths:
                     type: integer
                     description: Meaning of second_prop
                     example: 42
+  /api/kytos/topology/:
+    get:
+      summary: Return the latest known topology.
+      description: This topology is updated when there are network events.
+      responses:
+        200:  # You can add more responses
+          description: The request has succeeded.
+          content:
+            application/json:  # You can also use text/plain, for example
+              schema:
+                type: object  # Adapt to your response
+                properties:
+                  prop_one:
+                    type: string
+                    description: Meaning of prop_one
+                    example: an example of prop_one
+                  second_prop:
+                    type: integer
+                    description: Meaning of second_prop
+                    example: 42
+
+
+definitions:
+  Device:
+    oneOf:
+    - $ref: '#/definitions/Switch'
+    - $ref: '#/definitions/Host'
+
+  Switch:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Switch identifier.
+        example: 00:00:00:00:00:00:00:01
+      name:
+        type: string
+        description: An alternative identifier, like an alias.
+        example: my-beautiful-switch
+      serial:
+        type: string
+        description: Display the serial number of switch
+      software:
+         type: string
+         description: Describe the software version
+         example: Version 2.3.4
+      ofp_version:
+         type: string
+         description: Openflow version
+         example: '0x01'
+      connection:
+         type: string
+         description: Address used to communicate with the controller
+         example: 127.0.0.1:49330
+      data_path:
+         type: string
+         description: Datapath identifier
+      manufacturer:
+         type: string
+         description: Manufacture name
+         example: Unkown Manufactor
+      hardware:
+         type: string
+         description: describe the Hardware version
+         example: Hardware version 2.0
+      type:
+        type: string
+        description: Display 'switch' as device type.
+        example: switch
+
+  Host:
+    type: object
+    properties:
+      type:
+        type: string
+        description: Display 'host' as device type.
+        example: host
+      mac:
+        type: string
+        description: Mac address of this host interface
+        example: 36:87:18:7a:19:a5
