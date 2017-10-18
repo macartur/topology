@@ -8,8 +8,11 @@ from pathlib import Path
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 
-from napps.kytos.topology.models import (Device, DeviceType, Interface, Port,
-                                         Topology)
+#from napps.kytos.topology.models import (Device, DeviceType, Interface, Port,
+#                                         Topology, Host)
+
+from napps.kytos.topology.models import (Topology, Host)
+
 from napps.kytos.topology import settings
 
 
@@ -22,16 +25,6 @@ class Main(KytosNApp):
     def setup(self):
         """Initiate a new topology and preload configurations."""
         self.topology = Topology()
-        topology_json = settings.PRELOAD_TOPOLOGY_PATH
-        if Path(topology_json.exists()):
-            with open(Path(topology_json), 'r') as data:
-                data = json.loads(data.read())
-                try:
-                    self.topology = Topology.from_json(data)
-                except Exception:
-                    self.topology = Topology()
-        else:
-            self.topology = Topology()
 
     def execute(self):
         """Do nothing."""
@@ -78,7 +71,7 @@ class Main(KytosNApp):
             string: json with the full topology.
 
         """
-        return json.dumps(self.topology.to_json())
+        return self.topology.to_json()
 
     @listen_to('.*.switch.new')
     def handle_new_switch(self, event):
@@ -89,125 +82,90 @@ class Main(KytosNApp):
 
         """
         switch = event.content['switch']
-        device = Device(switch.id)
-        self.topology.add_device(device)
-        log.debug('Switch %s added to the Topology.', device.id_)
+        switch.id_ = switch.id
+        self.topology.add_device(switch)
+        log.debug('Switch %s added to the Topology.', switch.id)
         self.notify_topology_update()
 
-    @listen_to('.*.switch.port.created')
-    def handle_port_created(self, event):
-        """Listen an event and create the respective port, if needed."""
-        device = self.topology.get_device(event.content['switch'])
-        if device is None:
-            return
+    #@listen_to('.*.switch.port.created')
+    #def handle_port_created(self, event):
+    #    """Listen an event and create the respective port, if needed."""
+    #    device = self.topology.get_device(event.content['switch'])
+    #    if device is None:
+    #        return
 
-        port = device.get_port(event.content['port'])
-        if port is not None:
-            msg = 'The port %s already exists on the switch %s. '
-            msg += 'It cannot be created again.'
-            log.debug(msg, event.content['port'], device.id_)
-            return
+    #    port = device.get_port(event.content['port'])
+    #    if port is not None:
+    #        msg = 'The port %s already exists on the switch %s. '
+    #        msg += 'It cannot be created again.'
+    #        log.debug(msg, event.content['port'], device.id_)
+    #        return
 
-        port = Port(number=event.content['port'])
-        port.properties = event.content['port_description']
-        if 'mac' in port.properties:
-            port.mac = port.properties['mac']
-        if 'alias' in port.properties and port.properties['alias']:
-            port.alias = port.properties['alias']
-        device.add_port(port)
+    #    port = Port(number=event.content['port'])
+    #    port.properties = event.content['port_description']
+    #    if 'mac' in port.properties:
+    #        port.mac = port.properties['mac']
+    #    if 'alias' in port.properties and port.properties['alias']:
+    #        port.alias = port.properties['alias']
+    #    device.add_port(port)
 
-    @listen_to('.*.switch.port.modified')
-    def handle_port_modified(self, event):
+    @listen_to('.*.switch.interface.modified')
+    def handle_interface_modified(self, event):
         """Update port properties based on a Port Modified event."""
         # Get Switch
-        device = self.topology.get_device(event.content['switch'])
-        if device is None:
-            log.error('Device %s not found.', event.content['switch'])
-            return
+        interface = event.content['interface']
+        # TODO: Fix here
+        log.info("**********************")
+        log.info(interface)
 
-        # Get Switch Port
-        port = device.get_port(event.content['port'])
-        if port is None:
-            msg = 'Port %s not found on switch %s. Creating new port.'
-            log(msg, event.content['port'], device.id_)
-            self.handle_port_created(event)
-            return
+        #device = self.topology.get_device(event.content['switch'])
+        #if device is None:
+        #    log.error('Device %s not found.', event.content['switch'])
+        #    return
 
-        port.properties = event.content['port_description']
-        if 'mac' in port.properties:
-            port.mac = port.properties['mac']
+        ## Get Switch Port
+        #port = device.get_port(event.content['port'])
+        #if port is None:
+        #    msg = 'Port %s not found on switch %s. Creating new port.'
+        #    log(msg, event.content['port'], device.id_)
+        #    self.handle_port_created(event)
+        #    return
 
-    @listen_to('.*.switch.port.deleted')
-    def handle_port_deleted(self, event):
+        #port.properties = event.content['port_description']
+        #if 'mac' in port.properties:
+        #    port.mac = port.properties['mac']
+
+    @listen_to('.*.switch.interface.deleted')
+    def handle_interface_deleted(self, event):
         """Delete a port from a switch.
 
         It also does the necessary cleanup on the topology.
 
         """
         # Get Switch
-        device = self.topology.get_device(event.content['switch'])
-        if device is None:
-            log.error('Device %s not found.', event.content['switch'])
-            return
-
-        # Get Switch Port
-        port = device.get_port(event.content['port'])
-        if port is None:
-            msg = 'Port %s not found on switch %s. Nothing to delete.'
-            log(msg, event.content['port'], device.id_)
-            return
-
-        # Create the interface object
-        interface = Interface(device, port)
-
-        # Get Link from Interface
-        link = self.topology.get_link(interface)
-
-        # Destroy the link
-        self.topology.unset_link(link)
-
-        # Remove the port
-        device.remove_port(port)
+        interface = event.content['interface']
+        self.topology.remove_interface_links(interface.id)
 
     @listen_to('.*.reachable.mac')
-    def set_link(self, event):
+    def add_host(self, event):
         """Set a new link if needed."""
-        device_a = self.topology.get_device(event.content['switch'])
 
-        if device_a is None:
-            device_a = Device(event.content['switch'])
-            self.topology.add_device(device_a)
+        interface = event.content['port']
+        mac = event.content['reachable_mac']
 
-        if not device_a.has_port(event.content['port']):
-            port = Port(number=event.content['port'])
-            device_a.add_port(port)
-
-        interface_a = device_a.get_interface_for_port(event.content['port'])
-
-        link = self.topology.get_link(interface_a)
+        host = Host(mac)
+        link = self.topology.get_link(interface.id)
         if link is not None:
             return
 
-        # Try getting one interface for that specific mac.
-        mac = event.content['reachable_mac']
-        device_b = None
-        interface_b = None
-        for device in self.topology.devices:
-            for port in device.ports:
-                if port.mac == mac:
-                    interface_b = device.get_interface_for_port(port)
+        self.topology.add_link(interface.id, host.id)
+        self.topology.add_device(host)
 
-        if interface_b is None:
-            device_b = Device(mac, dtype=DeviceType.HOST)
-            port = Port(mac=mac)
-            device_b.add_port(port)
-            self.topology.add_device(device_b)
-            interface_b = Interface(device_b, port)
-
-        self.topology.set_link(interface_a, interface_b)
+        if settings.DISPLAY_FULL_DUPLEX_LINKS:
+            self.topology.add_link(host.id, interface.id)
 
     @listen_to('.*.interface.is.nni')
-    def set_interface_as_nni(self, event):
+    def add_links(self, event):
         """Set an existing interface as NNI (and the interface linked to it).
 
         If the interface is already a NNI, then nothing is done.
@@ -221,45 +179,16 @@ class Main(KytosNApp):
         interface_a = event.content['interface_a']
         interface_b = event.content['interface_b']
 
-        # Get Switch A
-        switch_a = self.topology.get_device(interface_a['switch'])
-        if switch_a is None:
-            switch_a = Device(switch_a)
-            self.topology.add_device(switch_a)
+        self.topology.remove_interface_links(interface_a.id)
+        self.topology.remove_interface_links(interface_b.id)
 
-        # Get Port A
-        port_a = switch_a.get_port(interface_a['port'])
-        if port_a is None:
-            port_a = Port(interface_a['port'])
-            switch_a.add_port(port_a)
+        self.topology.add_link(*sorted([interface_a.id, interface_b.id]))
+        if settings.DISPLAY_FULL_DUPLEX_LINKS:
+            self.topology.add_link(*sorted([interface_b.id, interface_a.id],
+                                           reverse=True))
 
-        # Interface A
-        interface_a = Interface(switch_a, port_a)
-
-        # Get Switch B
-        switch_b = self.topology.get_device(interface_b['switch'])
-        if switch_b is None:
-            switch_b = Device(switch_b)
-            self.topology.add_device(switch_b)
-
-        # Get Port B
-        port_b = switch_b.get_port(interface_b['port'])
-        if port_b is None:
-            port_b = Port(interface_b['port'])
-            switch_b.add_port(port_b)
-
-        # Interface A
-        interface_b = Interface(switch_b, port_b)
-
-        # Get Link from Interface
-        link_a = self.topology.get_link(interface_a)
-        link_b = self.topology.get_link(interface_b)
-
-        if link_a is not None and link_a is link_b:
-            return
-
-        link = self.topology.set_link(interface_a, interface_b, force=True)
-        link.set_nnis()
+        interface_a.nni = True
+        interface_b.nni = True
 
         # Update interfaces from link as NNI
         self.notify_topology_update()

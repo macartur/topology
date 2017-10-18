@@ -1,2 +1,7 @@
-#: This is the Path to a json file to be preloaded during napp startup
-PRELOAD_TOPOLOGY_PATH=None
+# This is the Path to a json file to be preloaded during napp startup.
+# This file has the links aliases to be displayed for shorter outputs, if
+# needed.
+CUSTOM_LINKS_PATH='/tmp/test.json'
+
+# Set this option to true if you need the topology with bi-directional links
+DISPLAY_FULL_DUPLEX_LINKS=True
