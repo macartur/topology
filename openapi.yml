@@ -27,18 +27,13 @@ paths:
         200:  # You can add more responses
           description: The request has succeeded.
           content:
-            application/json:  # You can also use text/plain, for example
+            application/json:
               schema:
-                type: object  # Adapt to your response
+                type: object
                 properties:
-                  prop_one:
-                    type: string
-                    description: Meaning of prop_one
-                    example: an example of prop_one
-                  second_prop:
-                    type: integer
-                    description: Meaning of second_prop
-                    example: 42
+                  links:
+                    $ref: "#/components/schemas/Links"
+
   /api/kytos/topology/:
     get:
       summary: Return the latest known topology.
@@ -60,10 +55,13 @@ paths:
                     description: Meaning of second_prop
                     example: 42
 
+# Components models here
 components:
   schemas:
     Devices:
       type: object
+      example:
+        $ref: "#/definitions/examples/ListofDevices"
       additionalProperties:
         $ref: "#/components/schemas/Device"
 
@@ -139,3 +137,81 @@ components:
           type: string
           description: Mac address of this host interface
           example: 36:87:18:7a:19:a5
+
+    Links:
+      type: array
+      #example:
+      #  $ref: "#/definitions/examples/ListofDevices"
+      items:
+        $ref: "#/components/schemas/Link"
+
+    Link:
+      type: object
+      properties:
+        a:
+          type: string
+          description: One of the link ends.
+          example: 00:00:00:00:00:00:00:01:1
+        b:
+          type: string
+          description: One of the link ends.
+          example: 36:87:18:7a:19:a5
+
+# Exemples here
+definitions:
+  examples:
+    ListofDevices:
+        {
+        "00:00:00:00:00:00:00:01": {
+            "connection": "127.0.0.1:36918",
+            "data_path": "",
+            "dpid": "00:00:00:00:00:00:00:01",
+            "hardware": "",
+            "id": "00:00:00:00:00:00:00:01",
+            "interfaces": {
+                "00:00:00:00:00:00:00:01:1": {
+                    "id": "00:00:00:00:00:00:00:01:1",
+                    "mac": "26:fb:42:20:b8:b1",
+                    "name": "s1-eth1",
+                    "nni": false,
+                    "port_number": 1,
+                    "speed": "10 Gbps",
+                    "switch": "00:00:00:00:00:00:00:01",
+                    "type": "interface",
+                    "uni": true
+                },
+                "00:00:00:00:00:00:00:01:2": {
+                    "id": "00:00:00:00:00:00:00:01:2",
+                    "mac": "de:19:a1:63:d1:5a",
+                    "name": "s1-eth2",
+                    "nni": true,
+                    "port_number": 2,
+                    "speed": "10 Gbps",
+                    "switch": "00:00:00:00:00:00:00:01",
+                    "type": "interface",
+                    "uni": false
+                },
+                "00:00:00:00:00:00:00:01:65534": {
+                    "id": "00:00:00:00:00:00:00:01:65534",
+                    "mac": "9e:fb:8d:e0:c2:40",
+                    "name": "s1",
+                    "nni": false,
+                    "port_number": 65534,
+                    "speed": "",
+                    "switch": "00:00:00:00:00:00:00:01",
+                    "type": "interface",
+                    "uni": true
+                }
+            },
+            "manufacturer": "",
+            "name": "00:00:00:00:00:00:00:01",
+            "ofp_version": "0x01",
+            "serial": "",
+            "software": null,
+            "type": "switch"
+        },
+        "00:00:00:00:00:01": {
+            "mac": "00:00:00:00:00:01",
+            "type": "host"
+        }
+			  }
