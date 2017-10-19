@@ -46,6 +46,8 @@ paths:
               schema:
                 type: object
                 properties:
+                  aliases:
+                    $ref: "#/components/schemas/Aliases"
                   devices:
                     $ref: "#/components/schemas/Devices"
                   links:
@@ -153,9 +155,42 @@ components:
           description: One of the link ends.
           example: 36:87:18:7a:19:a5
 
+    Aliases:
+      type: array
+      example:
+        $ref: "#/definitions/examples/ListofAliases"
+      items:
+        $ref: "#/components/schemas/Alias"
+
+    Alias:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The alias name. Defined by the user.
+          example: link-brazil-miami
+        points:
+          type: array
+          items:
+            type: string
+            description: Each endpoint that is part of the link
+            example: 00:00:00:00:00:00:00:01:1
+
 # Exemples here
 definitions:
   examples:
+    ListofAliases:
+      [{
+          "name": "link-brazil-miami",
+          "points": [
+              "1:1",
+              "1:2",
+              "2:1",
+              "2:2"
+              ]
+        },
+      ]
+
     ListofDevices:
         {
         "00:00:00:00:00:00:00:01": {
@@ -210,4 +245,4 @@ definitions:
             "mac": "00:00:00:00:00:01",
             "type": "host"
         }
-			  }
+        }

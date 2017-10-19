@@ -29,10 +29,8 @@ repository. To install this NApp, run:
 Configuring
 ###########
 
-You can preload your topology by defining, on the `settings.py` file, the
-variable `PRELOAD_TOPOLOGY_PATH` with the path of the *json* file you wish to
-preload. The format of this json must follow the structure of the
-Topology.to_json() method.
+You have few options to configure the behaviour of this NApp in the
+`settings.py` file. Please take a look in this file.
 
 ######
 Events
