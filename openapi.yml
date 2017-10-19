@@ -17,8 +17,11 @@ paths:
                 type: object
                 properties:
                   devices:
-                    $ref: "#/components/schemas/Devices"
-
+                    type: object
+                    example:
+                      $ref: "#/definitions/examples/ListofDevices"
+                    additionalProperties:
+                      $ref: "#/components/schemas/Device"
   /api/kytos/topology/links:
     get:
       summary: Return a json with all the links in the topology.
@@ -32,8 +35,9 @@ paths:
                 type: object
                 properties:
                   links:
-                    $ref: "#/components/schemas/Links"
-
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Link"
   /api/kytos/topology/:
     get:
       summary: Return the latest known topology.
@@ -47,22 +51,22 @@ paths:
                 type: object
                 properties:
                   aliases:
-                    $ref: "#/components/schemas/Aliases"
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Alias"
                   devices:
-                    $ref: "#/components/schemas/Devices"
+                    type: object
+                    example:
+                      $ref: "#/definitions/examples/ListofDevices"
+                    additionalProperties:
+                      $ref: "#/components/schemas/Device"
                   links:
-                    $ref: "#/components/schemas/Links"
-
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Link"
 # Components models here
 components:
   schemas:
-    Devices:
-      type: object
-      example:
-        $ref: "#/definitions/examples/ListofDevices"
-      additionalProperties:
-        $ref: "#/components/schemas/Device"
-
     Device:
       oneOf:
       - $ref: '#/components/schemas/Switch'
@@ -179,13 +183,6 @@ components:
             type: boolean
             description: Indicates if this is a User-to-network interface
             example: true
-    Links:
-      type: array
-      #example:
-      #  $ref: "#/definitions/examples/ListofDevices"
-      items:
-        $ref: "#/components/schemas/Link"
-
     Link:
       type: object
       properties:
@@ -197,14 +194,6 @@ components:
           type: string
           description: One of the link ends.
           example: 36:87:18:7a:19:a5
-
-    Aliases:
-      type: array
-      example:
-        $ref: "#/definitions/examples/ListofAliases"
-      items:
-        $ref: "#/components/schemas/Alias"
-
     Alias:
       type: object
       properties:
