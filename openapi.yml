@@ -169,7 +169,7 @@ components:
           type: string
           description: The alias name. Defined by the user.
           example: link-brazil-miami
-        points:
+        hops:
           type: array
           items:
             type: string
@@ -182,7 +182,7 @@ definitions:
     ListofAliases:
       [{
           "name": "link-brazil-miami",
-          "points": [
+          "hops": [
               "1:1",
               "1:2",
               "2:1",
