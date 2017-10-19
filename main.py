@@ -49,7 +49,11 @@ class Main(KytosNApp):
 
         Links are directed connections between devices.
         """
-        return json.dumps(self.topology.links)
+        links = []
+        for link in self.topology.links:
+            links.append({'source': link[0], 'target': link[1]})
+
+        return json.dumps({'links': links})
 
     @rest('/')
     def get_topology(self):
