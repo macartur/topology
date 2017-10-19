@@ -183,7 +183,10 @@ class Topology:
         for device in self.devices:
             output['devices'][device.id] = device.as_dict()
 
-        output['links'] = list(self._links)
+        for link in self._links:
+            output['links'].append({'a': link[0],
+                                    'b': link[1]})
+
         with open(settings.CUSTOM_LINKS_PATH, 'r') as fp:
             output['aliases'] = json.load(fp)
 
