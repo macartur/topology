@@ -12,14 +12,13 @@ paths:
         200:  # You can add more responses
           description: The request has succeeded.
           content:
-            application/json:  # You can also use text/plain, for example
+            application/json:
               schema:
                 type: object
                 properties:
-                  device_id:
-                    type: object
-                    schema:
-                      $ref: '#/definitions/Device'
+                  devices:
+                    $ref: "#/components/schemas/Devices"
+
   /api/kytos/topology/links:
     get:
       summary: Return a json with all the links in the topology.
@@ -61,63 +60,90 @@ paths:
                     description: Meaning of second_prop
                     example: 42
 
+components:
+  schemas:
+    Devices:
+      type: object
+      properties:
+        key:
+          type: string
+          example: "00:00:00:00:00"
+        value:
+          $ref: "#/components/schemas/Device"
 
-definitions:
-  Device:
-    oneOf:
-    - $ref: '#/definitions/Switch'
-    - $ref: '#/definitions/Host'
+      required:
+        - key
+        - value
 
-  Switch:
-    type: object
-    properties:
-      id:
-        type: string
-        description: Switch identifier.
-        example: 00:00:00:00:00:00:00:01
-      name:
-        type: string
-        description: An alternative identifier, like an alias.
-        example: my-beautiful-switch
-      serial:
-        type: string
-        description: Display the serial number of switch
-      software:
-         type: string
-         description: Describe the software version
-         example: Version 2.3.4
-      ofp_version:
-         type: string
-         description: Openflow version
-         example: '0x01'
-      connection:
-         type: string
-         description: Address used to communicate with the controller
-         example: 127.0.0.1:49330
-      data_path:
-         type: string
-         description: Datapath identifier
-      manufacturer:
-         type: string
-         description: Manufacture name
-         example: Unkown Manufactor
-      hardware:
-         type: string
-         description: describe the Hardware version
-         example: Hardware version 2.0
-      type:
-        type: string
-        description: Display 'switch' as device type.
-        example: switch
+    Device:
+      oneOf:
+      - $ref: '#/components/schemas/Switch'
+      - $ref: '#/components/schemas/Host'
 
-  Host:
-    type: object
-    properties:
-      type:
-        type: string
-        description: Display 'host' as device type.
-        example: host
-      mac:
-        type: string
-        description: Mac address of this host interface
-        example: 36:87:18:7a:19:a5
+    Switch:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Switch identifier.
+          example: 00:00:00:00:00:00:00:01
+        name:
+          type: string
+          description: An alternative identifier, like an alias.
+          example: my-beautiful-switch
+        serial:
+          type: string
+          description: Display the serial number of switch
+        software:
+           type: string
+           description: Describe the software version
+           example: Version 2.3.4
+        ofp_version:
+           type: string
+           description: Openflow version
+           example: '0x01'
+        connection:
+           type: string
+           description: Address used to communicate with the controller
+           example: 127.0.0.1:49330
+        data_path:
+           type: string
+           description: Datapath identifier
+        manufacturer:
+           type: string
+           description: Manufacture name
+           example: Unkown Manufactor
+        hardware:
+           type: string
+           description: describe the Hardware version
+           example: Hardware version 2.0
+        type:
+          type: string
+          description: Display 'switch' as device type.
+          example: switch
+      example:
+          - {
+            "connection": "127.0.0.1:33964",
+            "data_path": "",
+            "dpid": "00:00:00:00:00:00:00:01",
+            "hardware": "",
+            "id": "00:00:00:00:00:00:00:01",
+            "manufacturer": "",
+            "name": "00:00:00:00:00:00:00:01",
+            "ofp_version": "0x01",
+            "serial": "",
+            "software": null,
+            "type": "switch"
+        }
+
+    Host:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Display 'host' as device type.
+          example: host
+        mac:
+          type: string
+          description: Mac address of this host interface
+          example: 36:87:18:7a:19:a5

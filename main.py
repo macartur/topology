@@ -40,8 +40,8 @@ class Main(KytosNApp):
 
         For now, a device can be a Switch or a Host.
         """
-        output = {d.id: d.as_dict() for d in self.topology.devices}
-        return json.dumps(output)
+        out = {'devices': {d.id: d.as_dict() for d in self.topology.devices}}
+        return json.dumps(out)
 
     @rest('links')
     def get_links(self):
