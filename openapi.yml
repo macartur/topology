@@ -42,18 +42,14 @@ paths:
         200:  # You can add more responses
           description: The request has succeeded.
           content:
-            application/json:  # You can also use text/plain, for example
+            application/json:
               schema:
-                type: object  # Adapt to your response
+                type: object
                 properties:
-                  prop_one:
-                    type: string
-                    description: Meaning of prop_one
-                    example: an example of prop_one
-                  second_prop:
-                    type: integer
-                    description: Meaning of second_prop
-                    example: 42
+                  devices:
+                    $ref: "#/components/schemas/Devices"
+                  links:
+                    $ref: "#/components/schemas/Links"
 
 # Components models here
 components:
