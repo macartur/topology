@@ -64,16 +64,8 @@ components:
   schemas:
     Devices:
       type: object
-      properties:
-        key:
-          type: string
-          example: "00:00:00:00:00"
-        value:
-          $ref: "#/components/schemas/Device"
-
-      required:
-        - key
-        - value
+      additionalProperties:
+        $ref: "#/components/schemas/Device"
 
     Device:
       oneOf:
