@@ -6,6 +6,6 @@
   "version": "0.0.1",
   "napp_dependencies": ["kytos/of_core", "kytos/of_lldp"],
   "license": "MIT",
-  "tags": ["work-in-progress", "topology", "rest"],
+  "tags": ["topology", "rest", "work-in-progress"],
   "url": "https://github.com/kytos/topology"
 }
