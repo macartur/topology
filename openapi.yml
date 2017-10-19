@@ -109,6 +109,10 @@ components:
           type: string
           description: Display 'switch' as device type.
           example: switch
+        interfaces:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/Interface'
       example:
           - {
             "connection": "127.0.0.1:33964",
@@ -135,7 +139,46 @@ components:
           type: string
           description: Mac address of this host interface
           example: 36:87:18:7a:19:a5
-
+    Interface:
+        type: object
+        properties:
+          id:
+            type: string
+            description: Interface identification
+            example: 00:00:00:00:00:00:00:01:1
+          mac:
+            type: string
+            description: Interface mac address
+            example: 26:fb:42:20:b8:b1
+          name:
+            type: string
+            description: interface name
+            example: s1-eth1
+          nni:
+            type: boolean
+            description: Indicates if this is a Network-to-network interface
+            example: false
+          port_number:
+            type: integer
+            description: Port number on the switch
+            example: 1
+          speed:
+            type: string
+            description: The speed of this interface
+            example: 10 Gbps
+          switch:
+            type: string
+            description: The id of the switch that this interface belongs to
+            example: 00:00:00:00:00:00:00:01
+          type:
+            type: string
+            description: Indicates that this is an Interface
+            enum: [interface]
+            example: interface
+          uni:
+            type: boolean
+            description: Indicates if this is a User-to-network interface
+            example: true
     Links:
       type: array
       #example:
