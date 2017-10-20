@@ -50,10 +50,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  aliases:
+                  circuits:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Alias"
+                      $ref: "#/components/schemas/Circuit"
                   devices:
                     type: object
                     example:
@@ -194,24 +194,43 @@ components:
           type: string
           description: One of the link ends.
           example: 36:87:18:7a:19:a5
-    Alias:
+    Circuit:
       type: object
       properties:
         name:
           type: string
-          description: The alias name. Defined by the user.
+          description: The circuit name. Defined by the user.
           example: link-brazil-miami
         hops:
           type: array
           items:
             type: string
-            description: Each endpoint that is part of the link
+            description: Each endpoint that is part of the circuit
             example: 00:00:00:00:00:00:00:01:1
+        custom_properties:
+          type: array
+          items:
+            type: object
+          example:
+            - name: weight
+              value: 25
+            - name: bandwidth_load
+              value: get_link_load()
+          additionalProperties:
+            $ref: '#/components/schemas/CustomProperty'
+    CustomProperty:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the property
+        value:
+          description: Value of the property
 
 # Exemples here
 definitions:
   examples:
-    ListofAliases:
+    ListofCircuits:
       [{
           "name": "link-brazil-miami",
           "hops": [
