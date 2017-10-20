@@ -73,7 +73,7 @@ class Topology:
         for link in links:
             if interface_id in link:
                 self._links.discard(link)
-        
+
     def add_device(self, new_device):
         """Add a device to the topology known devices.
 
@@ -190,7 +190,7 @@ class Topology:
         try:
             if settings.CUSTOM_LINKS_PATH:
                 with open(settings.CUSTOM_LINKS_PATH, 'r') as fp:
-                    output['aliases'] = json.load(fp)
+                    output['circuits'] = json.load(fp)
         except FileNotFoundError as e:
             pass
 
