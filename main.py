@@ -34,7 +34,7 @@ class Main(KytosNApp):
         """Do nothing."""
         log.info('NApp kytos/topology shutting down.')
 
-    @rest('v1/devices')
+    @rest('v2/devices')
     def get_devices(self):
         """Return a json with all the devices in the topology.
 
@@ -43,7 +43,7 @@ class Main(KytosNApp):
         out = {'devices': {d.id: d.as_dict() for d in self.topology.devices}}
         return json.dumps(out)
 
-    @rest('v1/links')
+    @rest('v2/links')
     def get_links(self):
         """Return a json with all the links in the topology.
 
@@ -55,7 +55,7 @@ class Main(KytosNApp):
 
         return json.dumps({'links': links})
 
-    @rest('v1/')
+    @rest('v2/')
     def get_topology(self):
         """Return the latest known topology.
 
