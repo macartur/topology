@@ -187,8 +187,12 @@ class Topology:
             output['links'].append({'a': link[0],
                                     'b': link[1]})
 
-        with open(settings.CUSTOM_LINKS_PATH, 'r') as fp:
-            output['aliases'] = json.load(fp)
+        try:
+            if settings.CUSTOM_LINKS_PATH:
+                with open(settings.CUSTOM_LINKS_PATH, 'r') as fp:
+                    output['aliases'] = json.load(fp)
+        except FileNotFoundError as e:
+            pass
 
         return json.dumps(output)
 
