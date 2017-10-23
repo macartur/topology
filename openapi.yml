@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
   title: kytos/topology
-  version: v1
+  version: v2
   description: Manage the network topology.
 paths:
-  /api/kytos/topology/v1/devices:
+  /api/kytos/topology/v2/devices:
     get:
       summary: Return a json with all the devices in the topology.
       description: For now, a device can be a Switch or a Host.
@@ -22,7 +22,7 @@ paths:
                       $ref: "#/definitions/examples/ListofDevices"
                     additionalProperties:
                       $ref: "#/components/schemas/Device"
-  /api/kytos/topology/v1/links:
+  /api/kytos/topology/v2/links:
     get:
       summary: Return a json with all the links in the topology.
       description: Links are directed connections between devices.
@@ -38,7 +38,7 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Link"
-  /api/kytos/topology/v1:
+  /api/kytos/topology/v2:
     get:
       summary: Return the latest known topology.
       description: This topology is updated when there are network events.
