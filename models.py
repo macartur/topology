@@ -53,10 +53,10 @@ class Topology:
         values dictionary in settings.py.
         """
         self._circuits = {}
-        if not hasattr(settings, 'CUSTOM_LINKS_PATH'):
+        if not hasattr(settings, 'CUSTOM_CIRCUITS_PATH'):
             return
 
-        path = Path(settings.CUSTOM_LINKS_PATH)
+        path = Path(settings.CUSTOM_CIRCUITS_PATH)
         if not path.exists():
             return
 
