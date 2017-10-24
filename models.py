@@ -1,5 +1,8 @@
 """Most relevant classes to be used on the topology."""
+from collections import namedtuple
+from copy import copy
 from enum import Enum, IntEnum, unique
+from pathlib import Path
 import json
 
 from napps.kytos.topology import settings
@@ -26,6 +29,11 @@ class Host:
         return {'mac': self.mac,
                 'type': 'host'}
 
+
+Circuit = namedtuple('Circuit', ['name', 'hops', 'custom_properties',
+                                 'hops_ws'])
+
+
 class Topology:
     """Represents the network topology."""
 
@@ -36,6 +44,87 @@ class Topology:
         """Init a topology object."""
         self._links = set()
         self._devices = {}
+        self._get_custom_circuits()
+
+    def _get_custom_circuits(self):
+        """Populate the circuits with the correct properties.
+
+        Data will be based on an existing configuration file and a default
+        values dictionary in settings.py.
+        """
+        self._circuits = {}
+        if not hasattr(settings, 'CUSTOM_LINKS_PATH'):
+            return
+
+        path = Path(settings.CUSTOM_LINKS_PATH)
+        if not path.exists():
+            return
+
+        with path.open() as custom_file:
+            circuits = json.loads(custom_file.read())
+        for c in circuits:
+            circuit = Circuit(c['name'], c['hops'], c['custom_properties'], [])
+            self._circuits[c['name']] = circuit
+
+        for c in self._circuits.values():
+            self._circuits[c.name] = Circuit(c.name, c.hops,
+                                             c.custom_properties,
+                                             self._remove_switch_hops(c.hops))
+
+        # Default for properties
+        if hasattr(settings, 'CUSTOM_PROPERTY_DEFAULTS'):
+            defaults = settings.CUSTOM_PROPERTY_DEFAULTS
+        else:
+            defaults = {}
+
+        # Given properties
+        all_properties = set([prop for circuit in self._circuits.values() for
+                              prop in circuit.custom_properties])
+        # Merge properties
+        for prop in all_properties:
+            if prop not in defaults:
+                defaults[prop] = 0
+
+        # Updating properties for simple circuits
+        for circuit in self._circuits.values():
+            if len(circuit.hops_ws) <= 2:
+                new_props = copy(defaults)
+                new_props.update(circuit.custom_properties)
+                self._circuits[circuit.name] = Circuit(circuit.name,
+                                                       circuit.hops,
+                                                       new_props,
+                                                       circuit.hops_ws)
+
+        # Updating properties for complex circuits
+        for circuit in self._circuits.values():
+            if len(circuit.hops_ws) > 2:
+                to_calculate = [p for p in defaults if p not in
+                                circuit.custom_properties]
+                for p in to_calculate:
+                    p_value = 0
+                    for idx, hop in enumerate(circuit.hops_ws):
+                        if idx < len(circuit.hops_ws) - 1:
+                            next_hop = circuit.hops_ws[idx+1]
+                            value = self._get_hop_custom_prop(hop, next_hop, p)
+                            p_value += defaults[p] if value is None else value
+                    circuit.custom_properties[p] = p_value
+
+    def _get_simple_circuit(self, hopA, hopB):
+        """Return a simple circuit with the two specified hosts."""
+        for circuit in self._circuits.values():
+            if circuit.hops_ws == [hopA, hopB]:
+                return circuit
+        return None
+
+    def _get_hop_custom_prop(self, hopA, hopB, prop):
+        """Return the correct value for a custom property of a simple link."""
+        if hopA.split(':')[0:8] == hopB.split(':')[0:8]:
+            return 0
+        circuit = self._get_simple_circuit(hopA, hopB)
+        if circuit is not None:
+            return circuit.custom_properties[prop]
+        else:
+            return None
 
     def _replace_by_objects(self, interface):
         """Replace interface device and port ids by objects.
@@ -187,14 +276,20 @@ class Topology:
             output['links'].append({'a': link[0],
                                     'b': link[1]})
 
-        try:
-            if settings.CUSTOM_LINKS_PATH:
-                with open(settings.CUSTOM_LINKS_PATH, 'r') as fp:
-                    output['circuits'] = json.load(fp)
-        except FileNotFoundError as e:
-            pass
+        output['circuits'] = [{"name": c.name,
+                               "hops": c.hops,
+                               "custom_properties":c.custom_properties} for c in
+                              self._circuits.values()]
 
         return json.dumps(output)
+
+    def _remove_switch_hops(self, hops):
+        """Remove hops representing a switch in a circuit."""
+        output = []
+        for hop in hops:
+            if len(hop.split(':')) != 8:
+                output.append(hop)
+        return output
 
     def _recreate_interface(self, data):
         """Recreate and return an interface.

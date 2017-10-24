@@ -4,7 +4,7 @@
 CUSTOM_LINKS_PATH = '/tmp/test.json'
 
 # Set default values for custom properties, for all single link circuits
-CUSTOM_PROPERTY_VALES = {
+CUSTOM_PROPERTY_DEFAULTS = {
 }
 
 # Set this option to true if you need the topology with bi-directional links
