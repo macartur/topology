@@ -213,7 +213,7 @@ components:
             $ref: '#/components/schemas/CustomProperty'
           example:
             weight: 25
-            bandwidth_load: get_link_load()
+            cost: 0.3
     CustomProperty:
       type: object
       properties:
