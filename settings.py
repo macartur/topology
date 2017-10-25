@@ -6,12 +6,12 @@ CUSTOM_CIRCUITS_PATH = 'etc/circuits.json'
 
 # Set default values for custom properties, for all single link circuits.  A
 # composed circuit property will be the sum of the sub-circuits.  For instance:
-# Assume a 3 hops linear circuits: a,b,c. If the circuit a-b has 'weigth' 10,
-# and 'b-c' has the weigth 20, then the circuit 'a-c' will have 'weight = 30'.
+# Assume a 3 hops linear circuits: a,b,c. If the circuit a-b has 'weight' 10,
+# and 'b-c' has the weight 20, then the circuit 'a-c' will have 'weight = 30'.
 #
 ## Example of custom properties:
 #   {
-#     'weigth': 20,
+#     'weight': 20,
 #     'adm_cost':33
 #   }
 #
