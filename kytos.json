@@ -3,7 +3,7 @@
   "username": "kytos",
   "name": "topology",
   "description": "Manage the network topology.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "napp_dependencies": ["kytos/of_core", "kytos/of_lldp"],
   "license": "MIT",
   "tags": ["topology", "rest", "work-in-progress"],

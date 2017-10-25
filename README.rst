@@ -32,6 +32,15 @@ Configuring
 You have few options to configure the behaviour of this NApp in the
 `settings.py` file. Please take a look in this file.
 
+You can customize circuits in the topology using a JSON configuration file. See
+`etc/circuits.json.sample` for an example.
+
+Circuits can have a name, a list of hops and as many numeric custom properties
+as the user wants.
+
+We are working to deliver methods and resources to extend the custom properties
+in the future.
+
 ######
 Events
 ######

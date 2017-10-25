@@ -208,23 +208,19 @@ components:
             description: Each endpoint that is part of the circuit
             example: 00:00:00:00:00:00:00:01:1
         custom_properties:
-          type: array
-          items:
-            type: object
-          example:
-            - name: weight
-              value: 25
-            - name: bandwidth_load
-              value: get_link_load()
-          additionalProperties:
+          type: object
+          attributes:
             $ref: '#/components/schemas/CustomProperty'
+          example:
+            weight: 25
+            cost: 0.3
     CustomProperty:
       type: object
       properties:
-        name:
+        custom_name:
           type: string
           description: Name of the property
-        value:
+        custom_value:
           description: Value of the property
 
 # Exemples here
