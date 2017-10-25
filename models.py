@@ -182,6 +182,13 @@ class Topology:
         """Return all current links."""
         return list(self._links)
 
+    @property
+    def circuits(self):
+        """Return all current circuits."""
+        return [{"name": c.name, "hops": c.hops,
+                 "custom_properties": c.custom_properties} for c in
+                self._circuits.values()]
+
     @devices.setter
     def devices(self, value):
         """Overriding devices attribute to avoid direct usage."""
@@ -276,10 +283,7 @@ class Topology:
             output['links'].append({'a': link[0],
                                     'b': link[1]})
 
-        output['circuits'] = [{"name": c.name,
-                               "hops": c.hops,
-                               "custom_properties":c.custom_properties} for c in
-                              self._circuits.values()]
+        output['circuits'] = self.circuits
 
         return json.dumps(output)
 
