@@ -45,6 +45,13 @@ class Topology:
         self._links = set()
         self._devices = {}
         self._get_custom_circuits()
+        self._get_custom_property_dpids()
+
+    def _get_custom_property_dpids(self):
+        if hasattr(settings, 'CUSTOM_PROPERTY_DPIDS'):
+            self._custom_properties = settings.CUSTOM_PROPERTY_DPIDS
+        else:
+            self._custom_properties = {}
 
     def _get_custom_circuits(self):
         """Populate the circuits with the correct properties.
@@ -271,6 +278,12 @@ class Topology:
         output = {'devices': {}, 'links': []}
         for device in self.devices:
             output['devices'][device.id] = device.as_dict()
+            try:
+                custom = self._custom_properties[device.id]
+            except KeyError:
+                custom = {}
+
+            output['devices'][device.id]['custom_properties'] = custom
 
         for link in self._links:
             output['links'].append({'a': link[0],

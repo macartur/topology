@@ -20,5 +20,14 @@ CUSTOM_CIRCUITS_PATH = 'etc/circuits.json'
 CUSTOM_PROPERTY_DEFAULTS = {
 }
 
+# Define here your datapaths custom properties
+# Here is a simple example. Please edit as you wish.
+CUSTOM_PROPERTY_DPIDS = {
+  '00:00:00:00:00:00:00:01': {
+      'lat': 0.8,
+      'long': 2.2
+  },
+}
+
 # Set this option to true if you need the topology with bi-directional links
 DISPLAY_FULL_DUPLEX_LINKS = True
