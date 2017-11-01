@@ -2,18 +2,19 @@
 
 Manage the network topology
 """
-import json
 from pathlib import Path
 
+from flask import jsonify
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
+
+from napps.kytos.topology import settings
+from napps.kytos.topology.models import Host, Topology
 
 #from napps.kytos.topology.models import (Device, DeviceType, Interface, Port,
 #                                         Topology, Host)
 
-from napps.kytos.topology.models import (Topology, Host)
 
-from napps.kytos.topology import settings
 
 
 class Main(KytosNApp):
@@ -41,7 +42,7 @@ class Main(KytosNApp):
         For now, a device can be a Switch or a Host.
         """
         out = {'devices': {d.id: d.as_dict() for d in self.topology.devices}}
-        return json.dumps(out)
+        return jsonify(out)
 
     @rest('v2/links')
     def get_links(self):
@@ -53,7 +54,7 @@ class Main(KytosNApp):
         for link in self.topology.links:
             links.append({'source': link[0], 'target': link[1]})
 
-        return json.dumps({'links': links})
+        return jsonify({'links': links})
 
     @rest('v2/')
     def get_topology(self):
@@ -61,7 +62,7 @@ class Main(KytosNApp):
 
         This topology is updated when there are network events.
         """
-        return self.topology.to_json()
+        return jsonify(self.topology.to_dict())
 
     @listen_to('.*.switch.new')
     def handle_new_switch(self, event):
