@@ -280,7 +280,7 @@ class Topology:
         self._links = {link.id_: link for link in obj.links}
         self._devices = {device.id_: device for device in obj.devices}
 
-    def to_json(self):
+    def to_dict(self):
         """Export the current topology as a serializeable dict."""
         output = {'devices': {}, 'links': []}
         for device in self.devices:
@@ -298,7 +298,11 @@ class Topology:
 
         output['circuits'] = self.circuits
 
-        return json.dumps(output)
+        return output
+
+    def to_json(self):
+        """Export the current topology as json."""
+        return json.dumps(self.to_dict())
 
     def _remove_switch_hops(self, hops):
         """Remove hops representing a switch in a circuit."""
