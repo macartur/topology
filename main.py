@@ -77,7 +77,7 @@ class Main(KytosNApp):
         log.debug('Switch %s added to the Topology.', switch.id)
         self.notify_topology_update()
 
-    @listen_to('.*.switch.interface.modified')
+    @listen_to('.*.switch.interface.ofppr_modify')
     def handle_interface_modified(self, event):
         """Update the topology based on a Port Modified event.
 
@@ -90,7 +90,7 @@ class Main(KytosNApp):
         log.info("**********************")
         log.info(interface)
 
-    @listen_to('.*.switch.interface.deleted')
+    @listen_to('.*.switch.interface.ofppr_delete')
     def handle_interface_deleted(self, event):
         """Update the topology based on a Port Delete event."""
         # Get Switch
