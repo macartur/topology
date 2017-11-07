@@ -14,14 +14,8 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  devices:
-                    type: object
-                    example:
-                      $ref: "#/definitions/examples/ListofDevices"
-                    additionalProperties:
-                      $ref: "#/components/schemas/Device"
+                $ref: "#/components/schemas/Device"
+
   /api/kytos/topology/v2/links:
     get:
       summary: Return a json with all the links in the topology.
@@ -54,12 +48,10 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Circuit"
-                  devices:
-                    type: object
                     example:
-                      $ref: "#/definitions/examples/ListofDevices"
-                    additionalProperties:
-                      $ref: "#/components/schemas/Device"
+                      $ref: "#/definitions/examples/ListofCircuits"
+                  devices:
+                    $ref: "#/components/schemas/Device"
                   links:
                     type: array
                     items:
@@ -67,11 +59,6 @@ paths:
 # Components models here
 components:
   schemas:
-    Device:
-      oneOf:
-      - $ref: '#/components/schemas/Switch'
-      - $ref: '#/components/schemas/Host'
-
     Switch:
       type: object
       properties:
@@ -117,20 +104,6 @@ components:
             type: object
             additionalProperties:
               $ref: '#/components/schemas/Interface'
-      example:
-          - {
-            "connection": "127.0.0.1:33964",
-            "data_path": "",
-            "dpid": "00:00:00:00:00:00:00:01",
-            "hardware": "",
-            "id": "00:00:00:00:00:00:00:01",
-            "manufacturer": "",
-            "name": "00:00:00:00:00:00:00:01",
-            "ofp_version": "0x01",
-            "serial": "",
-            "software": null,
-            "type": "switch"
-        }
 
     Host:
       type: object
@@ -222,23 +195,12 @@ components:
           description: Name of the property
         custom_value:
           description: Value of the property
-
-# Exemples here
-definitions:
-  examples:
-    ListofCircuits:
-      [{
-          "name": "link-brazil-miami",
-          "hops": [
-              "1:1",
-              "1:2",
-              "2:1",
-              "2:2"
-              ]
-        },
-      ]
-
-    ListofDevices:
+    Device:
+      type: object
+      anyOf:
+      - $ref: '#/components/schemas/Switch'
+      - $ref: '#/components/schemas/Host'
+      example:
         {
         "00:00:00:00:00:00:00:01": {
             "connection": "127.0.0.1:36918",
@@ -292,4 +254,18 @@ definitions:
             "mac": "00:00:00:00:00:01",
             "type": "host"
         }
+      }
+
+# Exemples here
+definitions:
+  examples:
+    ListofCircuits:
+      - {
+          "name": "link-brazil-miami",
+          "hops": [
+              "1:1",
+              "1:2",
+              "2:1",
+              "2:2"
+              ]
         }
