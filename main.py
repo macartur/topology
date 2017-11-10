@@ -96,6 +96,7 @@ class Main(KytosNApp):
         # Get Switch
         interface = event.content['interface']
         self.topology.remove_interface_links(interface.id)
+        self.notify_topology_update()
 
     @listen_to('.*.reachable.mac')
     def add_host(self, event):
