@@ -179,6 +179,18 @@ class Topology:
         """
         self._devices[new_device.id] = new_device
 
+    def remove_device(self, device):
+        """Remove a device from the topology known devices.
+
+        Args:
+            device (Device): One Device instance.
+
+        """
+        for interface in device.interfaces:
+            self.remove_interface_links(interface)
+
+        del self._devices[device.id]
+
     @property
     def devices(self):
         """Return all current devices."""

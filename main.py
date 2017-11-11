@@ -77,23 +77,36 @@ class Main(KytosNApp):
         log.debug('Switch %s added to the Topology.', switch.id)
         self.notify_topology_update()
 
+    @listen_to('.*.connection.lost')
+    def handle_connection_lost(self, event):
+        """Remove a Device from the topology.
+
+        Remove the disconnected Device and every link that has one of its
+        interfaces.
+        """
+        switch = event.content['source'].switch
+        if switch:
+            self.topology.remove_device(switch)
+            log.debug('Switch %s removed from the Topology.', switch.id)
+            self.notify_topology_update()
+
     @listen_to('.*.switch.interface.modified')
     def handle_interface_modified(self, event):
         """Update the topology based on a Port Modified event.
 
-        If a interface is with state down or similar we remove this interface
-        link from the topology.
+        If a interface has its link down we remove this interface from the
+        topology.
         """
-        # Get Switch
         interface = event.content['interface']
-        # TODO: Fix here
-        log.info("**********************")
-        log.info(interface)
+        # If the state bitmap is odd, it means there is no link.
+        # Otherwise, we assume the interface was not disconnected.
+        if interface.state % 2:
+            self.topology.remove_interface_links(interface.id)
+            self.notify_topology_update()
 
     @listen_to('.*.switch.interface.deleted')
     def handle_interface_deleted(self, event):
         """Update the topology based on a Port Delete event."""
-        # Get Switch
         interface = event.content['interface']
         self.topology.remove_interface_links(interface.id)
         self.notify_topology_update()
