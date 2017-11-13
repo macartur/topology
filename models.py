@@ -186,10 +186,14 @@ class Topology:
             device (Device): One Device instance.
 
         """
-        for interface in device.interfaces:
-            self.remove_interface_links(interface)
+        try:
+            for interface in device.interfaces:
+                self.remove_interface_links(interface)
 
-        del self._devices[device.id]
+            del self._devices[device.id]
+
+        except KeyError:
+            return False
 
     @property
     def devices(self):
