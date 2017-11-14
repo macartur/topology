@@ -187,8 +187,8 @@ class Topology:
 
         """
         try:
-            for interface in device.interfaces:
-                self.remove_interface_links(interface)
+            for interface in device.interfaces.values():
+                self.remove_interface_links(interface.id)
 
             del self._devices[device.id]
 
