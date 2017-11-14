@@ -64,7 +64,7 @@ class Main(KytosNApp):
         """
         return jsonify(self.topology.to_dict())
 
-    @listen_to('.*.switch.new')
+    @listen_to('.*.switch.(new|reconnected)')
     def handle_new_switch(self, event):
         """Create a new Device on the Topology.
 
