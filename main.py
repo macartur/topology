@@ -111,7 +111,6 @@ class Main(KytosNApp):
         self.topology.remove_interface_links(interface.id)
         self.notify_topology_update()
 
-    @listen_to('.*.reachable.mac')
     def add_host(self, event):
         """Update the topology with a new Host."""
 
