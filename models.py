@@ -300,13 +300,17 @@ class Topology:
         """Export the current topology as a serializeable dict."""
         output = {'devices': {}, 'links': []}
         for device in self.devices:
-            output['devices'][device.id] = device.as_dict()
+            dev = device.as_dict()
             try:
-                custom = self._custom_properties[device.id]
+                cp = self._custom_properties[device.id]
+                if 'description' in cp and cp['description']:
+                    if dev['name'] == dev['id']:
+                        dev['name'] = cp['description']
             except KeyError:
                 custom = {}
 
-            output['devices'][device.id]['custom_properties'] = custom
+            dev['custom_properties'] = cp
+            output['devices'][device.id] = dev
 
         for link in self._links:
             output['links'].append({'a': link[0],
