@@ -302,14 +302,15 @@ class Topology:
         for device in self.devices:
             dev = device.as_dict()
             try:
-                cp = self._custom_properties[device.id]
-                if 'description' in cp and cp['description']:
+                custom_properties = self._custom_properties[device.id]
+                if 'description' in custom_properties and \
+                   custom_properties['description']:
                     if dev['name'] == dev['id']:
-                        dev['name'] = cp['description']
+                        dev['name'] = custom_properties['description']
             except KeyError:
-                custom = {}
+                custom_properties = {}
 
-            dev['custom_properties'] = cp
+            dev['custom_properties'] = custom_properties
             output['devices'][device.id] = dev
 
         for link in self._links:
