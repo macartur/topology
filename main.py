@@ -52,7 +52,7 @@ class Main(KytosNApp):
         """
         links = []
         for link in self.topology.links:
-            links.append({'source': link[0], 'target': link[1]})
+            links.append({'a': link[0], 'b': link[1]})
 
         return jsonify({'links': links})
 
