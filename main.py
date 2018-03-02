@@ -28,14 +28,6 @@ class Main(KytosNApp):
         """Do nothing."""
         log.info('NApp kytos/topology shutting down.')
 
-    @rest('v2/devices')
-    def get_devices(self):
-        """Return a json with all the devices in the topology.
-
-        For now, a device can be a Switch or a Host.
-        """
-        out = {'devices': {d.id: d.as_dict() for d in self.topology.devices}}
-        return jsonify(out)
     def _get_link_or_create(self, endpoint_a, endpoint_b):
         new_link = Link(endpoint_a, endpoint_b)
         if new_link not in self.links:
@@ -46,17 +38,47 @@ class Main(KytosNApp):
             if link == new_link:
                 return link
 
+    def _get_switches_dict(self):
+        """Return a dictionary with the known switches."""
+        return {'switches': {d.id: d.as_dict() for d in
+                             self.controller.switches.values()}}
+
+    def _get_links_dict(self):
+        """Return a dictionary with the known links."""
+        links = {}
+        for link in self.links:
+            links[link.id] = link.as_dict()
+
+        return {'links': links}
+
+    def _get_topology_dict(self):
+        """Return a dictionary with the known topology."""
+        return {'topology': {**self._get_switches_dict(),
+                             **self._get_links_dict()}}
+
+    @rest('v2/switches')
+    def get_switches(self):
+        """Return a json with all the switches in the topology."""
+        return jsonify(self._get_switches_dict())
+
+    @rest('v2/interfaces')
+    def get_interfaces(self):
+        """Return a json with all the interfaces in the topology."""
+        interfaces = {}
+        switches = self._get_switches_dict()
+        for switch in switches['switches'].values():
+            for interface_id, interface in switch['interfaces'].items():
+                interfaces[interface_id] = interface
+
+        return jsonify({'interfaces': interfaces})
+
     @rest('v2/links')
     def get_links(self):
         """Return a json with all the links in the topology.
 
-        Links are directed connections between devices.
+        Links are connections between interfaces.
         """
-        links = []
-        for link in self.topology.links:
-            links.append({'a': link[0], 'b': link[1]})
-
-        return jsonify({'links': links})
+        return jsonify(self._get_links_dict())
 
     @rest('v2/')
     def get_topology(self):
@@ -64,7 +86,8 @@ class Main(KytosNApp):
 
         This topology is updated when there are network events.
         """
-        return jsonify(self.topology.to_dict())
+        return jsonify(self._get_topology_dict())
+
 
     @listen_to('.*.switch.(new|reconnected)')
     def handle_new_switch(self, event):
@@ -179,5 +202,5 @@ class Main(KytosNApp):
     def notify_topology_update(self):
         """Send an event to notify about updates on the topology."""
         name = 'kytos/topology.updated'
-        event = KytosEvent(name=name, content={'topology': self.topology})
+        event = KytosEvent(name=name, content=self._get_topology_dict())
         self.controller.buffers.app.put(event)
