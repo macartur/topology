@@ -2,19 +2,11 @@
 
 Manage the network topology
 """
-from pathlib import Path
-
 from flask import jsonify
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 
 from napps.kytos.topology import settings
-from napps.kytos.topology.models import Host, Topology
-
-#from napps.kytos.topology.models import (Device, DeviceType, Interface, Port,
-#                                         Topology, Host)
-
-
 
 
 class Main(KytosNApp):
@@ -25,7 +17,6 @@ class Main(KytosNApp):
 
     def setup(self):
         """Initiate a new topology and preload configurations."""
-        self.topology = Topology()
 
     def execute(self):
         """Do nothing."""
