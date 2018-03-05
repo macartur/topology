@@ -48,7 +48,7 @@ class Main(KytosNApp):
         return {'topology': {**self._get_switches_dict(),
                              "links": self.links}}
 
-    @rest('v2/')
+    @rest('v3/')
     def get_topology(self):
         """Return the latest known topology.
 
@@ -57,12 +57,12 @@ class Main(KytosNApp):
         return jsonify(self._get_topology_dict())
 
     # Switch related methods
-    @rest('v2/switches')
+    @rest('v3/switches')
     def get_switches(self):
         """Return a json with all the switches in the topology."""
         return jsonify(self._get_switches_dict())
 
-    @rest('v2/switches/<dpid>/metadata')
+    @rest('v3/switches/<dpid>/metadata')
     def get_switch_metadata(self, dpid):
         """Get metadata from a switch."""
         try:
@@ -71,7 +71,7 @@ class Main(KytosNApp):
         except KeyError:
             return jsonify("Switch not found"), 404
 
-    @rest('v2/switches/<dpid>/metadata', methods=['POST'])
+    @rest('v3/switches/<dpid>/metadata', methods=['POST'])
     def add_switch_metadata(self, dpid):
         """Add metadata to a switch."""
         metadata = request.get_json()
@@ -81,7 +81,7 @@ class Main(KytosNApp):
         except KeyError:
             return jsonify("Switch not found"), 404
 
-    @rest('v2/switches/<dpid>/metadata/<key>', methods=['DELETE'])
+    @rest('v3/switches/<dpid>/metadata/<key>', methods=['DELETE'])
     def delete_switch_metadata(self, dpid, key):
         """Delete metadata from a switch."""
         try:
@@ -94,7 +94,7 @@ class Main(KytosNApp):
         return jsonify("Metadata not found"), 404
 
     # Interface related methods
-    @rest('v2/interfaces')
+    @rest('v3/interfaces')
     def get_interfaces(self):
         """Return a json with all the interfaces in the topology."""
         interfaces = {}
@@ -105,7 +105,7 @@ class Main(KytosNApp):
 
         return jsonify({'interfaces': interfaces})
 
-    @rest('v2/interfaces/<interface_id>/metadata')
+    @rest('v3/interfaces/<interface_id>/metadata')
     def get_interface_metadata(self, interface_id):
         """Get metadata from an interface."""
         switch_id = ":".join(interface_id.split(":")[:-1])
@@ -122,7 +122,7 @@ class Main(KytosNApp):
 
         return jsonify({"metadata": interface.metadata}), 200
 
-    @rest('v2/interfaces/<interface_id>/metadata', methods=['POST'])
+    @rest('v3/interfaces/<interface_id>/metadata', methods=['POST'])
     def add_interface_metadata(self, interface_id):
         """Add metadata to an interface."""
         metadata = request.get_json()
@@ -142,7 +142,7 @@ class Main(KytosNApp):
         interface.extend_metadata(metadata)
         return jsonify("Operation successful"), 201
 
-    @rest('v2/interfaces/<interface_id>/metadata/<key>', methods=['DELETE'])
+    @rest('v3/interfaces/<interface_id>/metadata/<key>', methods=['DELETE'])
     def delete_interface_metadata(self, interface_id, key):
         """Delete metadata from an interface."""
         switch_id = ":".join(interface_id.split(":")[:-1])
@@ -163,7 +163,7 @@ class Main(KytosNApp):
         return jsonify("Metadata not found"), 404
 
     # Link related methods
-    @rest('v2/links')
+    @rest('v3/links')
     def get_links(self):
         """Return a json with all the links in the topology.
 
@@ -172,7 +172,7 @@ class Main(KytosNApp):
         return jsonify({"links": {link.id: link.as_dict() for link in
                                   self.links.values()}}), 200
 
-    @rest('v2/links/<link_id>/metadata')
+    @rest('v3/links/<link_id>/metadata')
     def get_link_metadata(self, link_id):
         """Get metadata from a link."""
         try:
@@ -180,7 +180,7 @@ class Main(KytosNApp):
         except KeyError:
             return jsonify("Link not found"), 404
 
-    @rest('v2/links/<link_id>/metadata', methods=['POST'])
+    @rest('v3/links/<link_id>/metadata', methods=['POST'])
     def add_link_metadata(self, link_id):
         """Add metadata to a link."""
         metadata = request.get_json()
@@ -190,7 +190,7 @@ class Main(KytosNApp):
         except KeyError:
             return jsonify("Link not found"), 404
 
-    @rest('v2/links/<link_id>/metadata/<key>', methods=['DELETE'])
+    @rest('v3/links/<link_id>/metadata/<key>', methods=['DELETE'])
     def delete_link_metadata(self, link_id, key):
         """Delete metadata from a link."""
         try:
