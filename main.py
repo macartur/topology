@@ -2,7 +2,7 @@
 
 Manage the network topology
 """
-from flask import jsonify
+from flask import jsonify, request
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 from kytos.core.link import Link
@@ -18,7 +18,7 @@ class Main(KytosNApp):
 
     def setup(self):
         """Initialize the NApp's links list."""
-        self.links = []
+        self.links = {}
 
     def execute(self):
         """Do nothing."""
@@ -30,37 +30,70 @@ class Main(KytosNApp):
 
     def _get_link_or_create(self, endpoint_a, endpoint_b):
         new_link = Link(endpoint_a, endpoint_b)
-        if new_link not in self.links:
-            self.links.append(new_link)
-            return new_link
 
-        for link in self.links:
-            if link == new_link:
+        for link in self.links.values():
+            if new_link == link:
                 return link
+
+        self.links[new_link.id] = new_link
+        return new_link
 
     def _get_switches_dict(self):
         """Return a dictionary with the known switches."""
         return {'switches': {d.id: d.as_dict() for d in
                              self.controller.switches.values()}}
 
-    def _get_links_dict(self):
-        """Return a dictionary with the known links."""
-        links = {}
-        for link in self.links:
-            links[link.id] = link.as_dict()
-
-        return {'links': links}
-
     def _get_topology_dict(self):
         """Return a dictionary with the known topology."""
         return {'topology': {**self._get_switches_dict(),
-                             **self._get_links_dict()}}
+                             "links": self.links}}
 
+    @rest('v2/')
+    def get_topology(self):
+        """Return the latest known topology.
+
+        This topology is updated when there are network events.
+        """
+        return jsonify(self._get_topology_dict())
+
+    # Switch related methods
     @rest('v2/switches')
     def get_switches(self):
         """Return a json with all the switches in the topology."""
         return jsonify(self._get_switches_dict())
 
+    @rest('v2/switches/<dpid>/metadata')
+    def get_switch_metadata(self, dpid):
+        """Get metadata from a switch."""
+        try:
+            return jsonify({"metadata":
+                            self.controller.switches[dpid].metadata}), 200
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+    @rest('v2/switches/<dpid>/metadata', methods=['POST'])
+    def add_switch_metadata(self, dpid):
+        """Add metadata to a switch."""
+        metadata = request.get_json()
+        try:
+            self.controller.switches[dpid].extend_metadata(metadata)
+            return jsonify("Operation successful"), 201
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+    @rest('v2/switches/<dpid>/metadata/<key>', methods=['DELETE'])
+    def delete_switch_metadata(self, dpid, key):
+        """Delete metadata from a switch."""
+        try:
+            status = self.controller.switches[dpid].remove_metadata(key)
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+        if status:
+            return jsonify("Operation successful"), 200
+        return jsonify("Metadata not found"), 404
+
+    # Interface related methods
     @rest('v2/interfaces')
     def get_interfaces(self):
         """Return a json with all the interfaces in the topology."""
@@ -72,22 +105,102 @@ class Main(KytosNApp):
 
         return jsonify({'interfaces': interfaces})
 
+    @rest('v2/interfaces/<interface_id>/metadata')
+    def get_interface_metadata(self, interface_id):
+        """Get metadata from an interface."""
+        switch_id = ":".join(interface_id.split(":")[:-1])
+        interface_number = int(interface_id.split(":")[-1])
+        try:
+            switch = self.controller.switches[switch_id]
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+        try:
+            interface = switch.interfaces[interface_number]
+        except KeyError:
+            return jsonify("Interface not found"), 404
+
+        return jsonify({"metadata": interface.metadata}), 200
+
+    @rest('v2/interfaces/<interface_id>/metadata', methods=['POST'])
+    def add_interface_metadata(self, interface_id):
+        """Add metadata to an interface."""
+        metadata = request.get_json()
+
+        switch_id = ":".join(interface_id.split(":")[:-1])
+        interface_number = int(interface_id.split(":")[-1])
+        try:
+            switch = self.controller.switches[switch_id]
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+        try:
+            interface = switch.interfaces[interface_number]
+        except KeyError:
+            return jsonify("Interface not found"), 404
+
+        interface.extend_metadata(metadata)
+        return jsonify("Operation successful"), 201
+
+    @rest('v2/interfaces/<interface_id>/metadata/<key>', methods=['DELETE'])
+    def delete_interface_metadata(self, interface_id, key):
+        """Delete metadata from an interface."""
+        switch_id = ":".join(interface_id.split(":")[:-1])
+        interface_number = int(interface_id.split(":")[-1])
+        try:
+            switch = self.controller.switches[switch_id]
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+        try:
+            interface = switch.interfaces[interface_number]
+        except KeyError:
+            return jsonify("Interface not found"), 404
+
+        status = interface.remove_metadata(key)
+        if status:
+            return jsonify("Operation successful"), 200
+        return jsonify("Metadata not found"), 404
+
+    # Link related methods
     @rest('v2/links')
     def get_links(self):
         """Return a json with all the links in the topology.
 
         Links are connections between interfaces.
         """
-        return jsonify(self._get_links_dict())
+        return jsonify({"links": {link.id: link.as_dict() for link in
+                                  self.links.values()}}), 200
 
-    @rest('v2/')
-    def get_topology(self):
-        """Return the latest known topology.
+    @rest('v2/links/<link_id>/metadata')
+    def get_link_metadata(self, link_id):
+        """Get metadata from a link."""
+        try:
+            return jsonify({"metadata": self.links[link_id].metadata}), 200
+        except KeyError:
+            return jsonify("Link not found"), 404
 
-        This topology is updated when there are network events.
-        """
-        return jsonify(self._get_topology_dict())
+    @rest('v2/links/<link_id>/metadata', methods=['POST'])
+    def add_link_metadata(self, link_id):
+        """Add metadata to a link."""
+        metadata = request.get_json()
+        try:
+            self.links[link_id].extend_metadata(metadata)
+            return jsonify("Operation successful"), 201
+        except KeyError:
+            return jsonify("Link not found"), 404
 
+    @rest('v2/links/<link_id>/metadata/<key>', methods=['DELETE'])
+    def delete_link_metadata(self, link_id, key):
+        """Delete metadata from a link."""
+        try:
+            status = self.links[link_id].remove_metadata(key)
+        except KeyError:
+            return jsonify("Link not found"), 404
+
+        if status:
+            return jsonify("Operation successful"), 200
+        return jsonify("Metadata not found"), 404
 
     @listen_to('.*.switch.(new|reconnected)')
     def handle_new_switch(self, event):
