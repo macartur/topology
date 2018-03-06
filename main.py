@@ -8,6 +8,7 @@ from kytos.core.helpers import listen_to
 from kytos.core.link import Link
 
 # from napps.kytos.topology import settings
+from napps.kytos.topology.models import Topology
 
 
 class Main(KytosNApp):
@@ -40,13 +41,22 @@ class Main(KytosNApp):
 
     def _get_switches_dict(self):
         """Return a dictionary with the known switches."""
-        return {'switches': {d.id: d.as_dict() for d in
+        return {'switches': {s.id: s.as_dict() for s in
                              self.controller.switches.values()}}
+
+    def _get_links_dict(self):
+        """Return a dictionary with the known links."""
+        return {'links': {l.id: l.as_dict() for l in
+                          self.links.values()}}
 
     def _get_topology_dict(self):
         """Return a dictionary with the known topology."""
         return {'topology': {**self._get_switches_dict(),
-                             "links": self.links}}
+                             **self._get_links_dict()}}
+
+    def _get_topology(self):
+        """Return an object representing the topology."""
+        return Topology(self.controller.switches, self.links)
 
     @rest('v3/')
     def get_topology(self):
@@ -223,8 +233,7 @@ class Main(KytosNApp):
 
         Links are connections between interfaces.
         """
-        return jsonify({"links": {link.id: link.as_dict() for link in
-                                  self.links.values()}}), 200
+        return jsonify(self._get_links_dict()), 200
 
     @rest('v3/links/<link_id>/enable', methods=['POST'])
     def enable_link(self, link_id):
@@ -389,5 +398,5 @@ class Main(KytosNApp):
     def notify_topology_update(self):
         """Send an event to notify about updates on the topology."""
         name = 'kytos/topology.updated'
-        event = KytosEvent(name=name, content=self._get_topology_dict())
+        event = KytosEvent(name=name, content=self._get_topology())
         self.controller.buffers.app.put(event)

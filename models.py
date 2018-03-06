@@ -1,7 +1,14 @@
 """Most relevant classes to be used on the topology."""
 
 
-__all__ = ('Host',)
+__all__ = ('Host', 'Topology')
+
+
+class Topology:
+    """Represent the topology with links and switches."""
+    def __init__(self, switches, links):
+        self.switches = switches
+        self.links = links
 
 
 class Host:
