@@ -7,7 +7,7 @@ from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 from kytos.core.link import Link
 
-from napps.kytos.topology import settings
+# from napps.kytos.topology import settings
 
 
 class Main(KytosNApp):
@@ -62,6 +62,24 @@ class Main(KytosNApp):
         """Return a json with all the switches in the topology."""
         return jsonify(self._get_switches_dict())
 
+    @rest('v3/switches/<dpid>/enable', methods=['POST'])
+    def enable_switch(self, dpid):
+        """Administratively enable a switch in the topology."""
+        try:
+            self.controller.switches[dpid].enable()
+            return jsonify("Operation successful"), 201
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+    @rest('v3/switches/<dpid>/disable', methods=['POST'])
+    def disable_switch(self, dpid):
+        """Administratively disable a switch in the topology."""
+        try:
+            self.controller.switches[dpid].disable()
+            return jsonify("Operation successful"), 201
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
     @rest('v3/switches/<dpid>/metadata')
     def get_switch_metadata(self, dpid):
         """Get metadata from a switch."""
@@ -104,6 +122,42 @@ class Main(KytosNApp):
                 interfaces[interface_id] = interface
 
         return jsonify({'interfaces': interfaces})
+
+    @rest('v3/interfaces/<interface_id>/enable', methods=['POST'])
+    def enable_interface(self, interface_id):
+        """Administratively enable an interface in the topology."""
+        switch_id = ":".join(interface_id.split(":")[:-1])
+        interface_number = int(interface_id.split(":")[-1])
+
+        try:
+            switch = self.controller.switches[switch_id]
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+        try:
+            switch.interfaces[interface_number].enable()
+        except KeyError:
+            return jsonify("Interface not found"), 404
+
+        return jsonify("Operation successful"), 201
+
+    @rest('v3/interfaces/<interface_id>/disable', methods=['POST'])
+    def disable_interface(self, interface_id):
+        """Administratively disable an interface in the topology."""
+        switch_id = ":".join(interface_id.split(":")[:-1])
+        interface_number = int(interface_id.split(":")[-1])
+
+        try:
+            switch = self.controller.switches[switch_id]
+        except KeyError:
+            return jsonify("Switch not found"), 404
+
+        try:
+            switch.interfaces[interface_number].disable()
+        except KeyError:
+            return jsonify("Interface not found"), 404
+
+        return jsonify("Operation successful"), 201
 
     @rest('v3/interfaces/<interface_id>/metadata')
     def get_interface_metadata(self, interface_id):
@@ -171,6 +225,26 @@ class Main(KytosNApp):
         """
         return jsonify({"links": {link.id: link.as_dict() for link in
                                   self.links.values()}}), 200
+
+    @rest('v3/links/<link_id>/enable', methods=['POST'])
+    def enable_link(self, link_id):
+        """Administratively enable a link in the topology."""
+        try:
+            self.links[link_id].enable()
+        except KeyError:
+            return jsonify("Link not found"), 404
+
+        return jsonify("Operation successful"), 201
+
+    @rest('v3/links/<link_id>/disable', methods=['POST'])
+    def disable_link(self, link_id):
+        """Administratively disable a link in the topology."""
+        try:
+            self.links[link_id].disable()
+        except KeyError:
+            return jsonify("Link not found"), 404
+
+        return jsonify("Operation successful"), 201
 
     @rest('v3/links/<link_id>/metadata')
     def get_link_metadata(self, link_id):
