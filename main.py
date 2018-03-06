@@ -398,5 +398,6 @@ class Main(KytosNApp):
     def notify_topology_update(self):
         """Send an event to notify about updates on the topology."""
         name = 'kytos/topology.updated'
-        event = KytosEvent(name=name, content=self._get_topology())
+        event = KytosEvent(name=name, content={'topology':
+                                               self._get_topology()})
         self.controller.buffers.app.put(event)
