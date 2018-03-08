@@ -1,61 +1,488 @@
 openapi: 3.0.0
 info:
   title: kytos/topology
-  version: v2
+  version: v3
   description: Manage the network topology.
 paths:
-  /api/kytos/topology/v2/devices:
-    get:
-      summary: Return a json with all the devices in the topology.
-      description: For now, a device can be a Switch or a Host.
-      responses:
-        200:  # You can add more responses
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Device"
-
-  /api/kytos/topology/v2/links:
-    get:
-      summary: Return a json with all the links in the topology.
-      description: Links are directed connections between devices.
-      responses:
-        200:  # You can add more responses
-          description: The request has succeeded.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  links:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Link"
-  /api/kytos/topology/v2:
+  /api/kytos/topology/v3/:
     get:
       summary: Return the latest known topology.
       description: This topology is updated when there are network events.
       responses:
-        200:  # You can add more responses
+        200:  
           description: The request has succeeded.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  circuits:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Circuit"
-                    example:
-                      $ref: "#/definitions/examples/ListofCircuits"
-                  devices:
-                    $ref: "#/components/schemas/Device"
                   links:
                     type: array
                     items:
                       $ref: "#/components/schemas/Link"
+                  switches:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Switch"
+  /api/kytos/topology/v3/switches:
+    get:
+      summary: Return a json with all the switches in the topology.
+      description: TODO write/remove the description
+      responses:
+        200:  
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object  
+                properties:
+                  switches:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Switch"
+  /api/kytos/topology/v3/switches/{dpid}/enable:
+    post:
+      summary: Administratively enable a switch in the topology.
+      description: TODO write/remove the description
+      parameters:
+        - name: dpid
+          in: path
+          description: Switch datapath ID
+          required: true
+          schema:
+            type: string
+          example: 00:00:00:00:00:00:00:01
+      responses:
+        201:
+          description: Operation sucessful.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Switch does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/switches/{dpid}/disable:
+    post:
+      summary: Administratively disable a switch in the topology.
+      description: TODO write/remove the description
+      parameters:
+        - name: dpid
+          schema:
+            type: string
+          required: true
+          description: Switch datapath ID.
+          in: path
+          example: 00:00:00:00:00:00:00:01
+      responses:
+        201:
+          description: Operation sucessful.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Switch does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/switches/{dpid}/metadata:
+    get:
+      summary: Get metadata from a switch.
+      description: TODO write/remove the description
+      parameters:
+        - name: dpid
+          schema:
+            type: string
+          required: true
+          description: Switch datapath ID.
+          in: path
+          example: 00:00:00:00:00:00:00:01
+      responses:
+        200:
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: Switch does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+    post:
+      summary: Add metadata to a switch.
+      description: TODO write/remove the description
+      parameters: 
+        - name: dpid
+          schema:
+            type: string
+          required: true
+          description: Switch datapath ID.
+          in: path
+          example: 00:00:00:00:00:00:00:01
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        201:
+          description: Operation sucessful
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Switch does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/switches/{dpid}/metadata/{key}:
+    delete:
+      summary: Delete metadata from a switch.
+      description: TODO write/remove the description
+      parameters:
+        - name: dpid
+          schema:
+            type: string
+          required: true
+          description: Switch datapath ID.
+          in: path
+          example: 00:00:00:00:00:00:00:01
+        - name: key
+          schema:
+            type: string
+          required: true
+          description: Key of the metadata to be removed.
+          in: path
+      responses:
+        201:
+          description: Operation sucessful
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Switch or metadata does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/interfaces:
+    get:
+      summary: Return a json with all the interfaces in the topology.
+      description: TODO write/remove the description
+      responses:
+        200:
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  interfaces:
+                    type: object  
+                    additionalProperties:
+                      $ref: '#/components/schemas/Interface'
+  /api/kytos/topology/v3/interfaces/{interface_id}/enable:
+    post:
+      summary: Administratively enable an interface in the topology.
+      description: TODO write/remove the description
+      parameters:
+        - name: interface_id
+          schema:
+            type: string
+          required: true
+          description: The interface ID.
+          in: path
+      responses:
+        200:
+          description: Operation successful.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation successful
+        404:
+          description: Switch or interface not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/interfaces/{interface_id}/disable:
+    post:
+      summary: Administratively disable an interface in the topology.
+      description: TODO write/remove the description
+      parameters:
+        - name: interface_id
+          schema:
+            type: string
+          required: true
+          description: The interface ID.
+          in: path
+      responses:
+        200:
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation successful
+        404:
+          description: Switch or interface not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/interfaces/{interface_id}/metadata:
+    get:
+      summary: Get metadata from an interface.
+      description: TODO write/remove the description
+      parameters:
+        - name: interface_id
+          schema:
+            type: string
+          required: true
+          description: The interface ID.
+          in: path
+      responses:
+        200:
+          description: Describe a successful call.
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: Switch or interface not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+    post:
+      summary: Add metadata to an interface.
+      description: TODO write/remove the description
+      parameters:
+        - name: interface_id
+          schema:
+            type: string
+          required: true
+          description: The interface ID.
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        201:
+          description: Operation sucessful
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Switch or interface does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/interfaces/{interface_id}/metadata/{key}:
+    delete:
+      summary: Delete metadata from an interface.
+      description: TODO write/remove the description
+      parameters:
+        - name: interface_id
+          schema:
+            type: string
+          required: true
+          description: The interface ID.
+          in: path
+      responses:
+        201:
+          description: Operation sucessful
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Switch or metadata does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Switch not found
+  /api/kytos/topology/v3/links:
+    get:
+      summary: Return a json with all the links in the topology.
+      description: Links are connections between interfaces.
+      responses:
+        200:  
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Link"
+  /api/kytos/topology/v3/links/{link_id}/enable:
+    post:
+      summary: Administratively enable a link in the topology.
+      description: TODO write/remove the description
+      parameters:
+        - name: link_id
+          schema:
+            type: string
+          required: true
+          description: The link ID.
+          in: path
+      responses:
+        200:
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation successful
+        404:
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Link not found
+  /api/kytos/topology/v3/links/{link_id}/disable:
+    post:
+      summary: Administratively disable a link in the topology.
+      description: TODO write/remove the description
+      parameters:
+        - name: link_id
+          schema:
+            type: string
+          required: true
+          description: The link ID.
+          in: path
+      responses:
+        200:
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation successful
+        404:
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Link not found
+  /api/kytos/topology/v3/links/{link_id}/metadata:
+    get:
+      summary: Get metadata from a link.
+      description: TODO write/remove the description
+      parameters:
+        - name: link_id
+          schema:
+            type: string
+          required: true
+          description: The link ID.
+          in: path
+      responses:
+        200:
+          description: Describe a successful call.
+          content:
+            application/json:
+              schema:
+                type: object
+        404:
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Link not found
+    post:
+      summary: Add metadata to a link.
+      description: TODO write/remove the description
+      parameters:
+        - name: link_id
+          schema:
+            type: string
+          required: true
+          description: The link ID.
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        201:
+          description: Operation sucessful
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Link does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Link not found
+  /api/kytos/topology/v3/links/{link_id}/metadata/{key}:
+    delete:
+      summary: Delete metadata from a link.
+      description: TODO write/remove the description
+      parameters:
+        - name: link_id
+          schema:
+            type: string
+          required: true
+          description: The link ID.
+          in: path
+      responses:
+        201:
+          description: Operation sucessful
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Operation sucessful
+        404:
+          description: Link does not exist
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Link not found
+
 # Components models here
 components:
   schemas:
@@ -100,172 +527,81 @@ components:
           type: string
           description: Display 'switch' as device type.
           example: switch
+        active:
+          type: boolean
+          description: The switch is active or not
+          example: true
+        enabled:
+          type: boolean
+          description: The switch is administratively enabled or not
+          example: false
+        dpid:
+          type: string
+          description: Datapath identifier
+          example: 00:00:00:00:00:00:00:01
+        metadata:
+          type: object
+          description: Switch's metadata
         interfaces:
-            type: object
-            additionalProperties:
-              $ref: '#/components/schemas/Interface'
-
-    Host:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Interface'
+    Interface:
       type: object
       properties:
-        type:
+        id:
           type: string
-          description: Display 'host' as device type.
-          example: host
+          description: Interface identification
+          example: 00:00:00:00:00:00:00:01:1
+        link:
+          type: string
+          description: UUID of the link this interface is connected to
+          example: 26927949-df3c-4c25-874b-3da30d8ae983
         mac:
           type: string
-          description: Mac address of this host interface
-          example: 36:87:18:7a:19:a5
-    Interface:
-        type: object
-        properties:
-          id:
-            type: string
-            description: Interface identification
-            example: 00:00:00:00:00:00:00:01:1
-          mac:
-            type: string
-            description: Interface mac address
-            example: 26:fb:42:20:b8:b1
-          name:
-            type: string
-            description: interface name
-            example: s1-eth1
-          nni:
-            type: boolean
-            description: Indicates if this is a Network-to-network interface
-            example: false
-          port_number:
-            type: integer
-            description: Port number on the switch
-            example: 1
-          speed:
-            type: string
-            description: The speed of this interface
-            example: 10 Gbps
-          switch:
-            type: string
-            description: The id of the switch that this interface belongs to
-            example: 00:00:00:00:00:00:00:01
-          type:
-            type: string
-            description: Indicates that this is an Interface
-            enum: [interface]
-            example: interface
-          uni:
-            type: boolean
-            description: Indicates if this is a User-to-network interface
-            example: true
+          description: Interface mac address
+          example: 26:fb:42:20:b8:b1
+        name:
+          type: string
+          description: interface name
+          example: s1-eth1
+        nni:
+          type: boolean
+          description: Indicates if this is a network-to-network interface
+          example: false
+        port_number:
+          type: integer
+          description: Port number on the switch
+          example: 1
+        speed:
+          type: string
+          description: The speed of this interface
+          example: 10 Gbps
+        switch:
+          type: string
+          description: The id of the switch that this interface belongs to
+          example: 00:00:00:00:00:00:00:01
+        type:
+          type: string
+          description: Indicates that this is an Interface
+          enum: [interface]
+          example: interface
+        uni:
+          type: boolean
+          description: Indicates if this is a User-to-network interface
+          example: true          
     Link:
       type: object
       properties:
-        a:
-          type: string
-          description: One of the link ends.
-          example: 00:00:00:00:00:00:00:01:1
-        b:
-          type: string
-          description: One of the link ends.
-          example: 36:87:18:7a:19:a5
-    Circuit:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The circuit name. Defined by the user.
-          example: link-brazil-miami
-        hops:
-          type: array
-          items:
-            type: string
-            description: Each endpoint that is part of the circuit
-            example: 00:00:00:00:00:00:00:01:1
-        custom_properties:
-          type: object
-          attributes:
-            $ref: '#/components/schemas/CustomProperty'
-          example:
-            weight: 25
-            cost: 0.3
-    CustomProperty:
-      type: object
-      properties:
-        custom_name:
-          type: string
-          description: Name of the property
-        custom_value:
-          description: Value of the property
-    Device:
-      type: object
-      anyOf:
-      - $ref: '#/components/schemas/Switch'
-      - $ref: '#/components/schemas/Host'
-      example:
-        {
-        "00:00:00:00:00:00:00:01": {
-            "connection": "127.0.0.1:36918",
-            "data_path": "",
-            "dpid": "00:00:00:00:00:00:00:01",
-            "hardware": "",
-            "id": "00:00:00:00:00:00:00:01",
-            "interfaces": {
-                "00:00:00:00:00:00:00:01:1": {
-                    "id": "00:00:00:00:00:00:00:01:1",
-                    "mac": "26:fb:42:20:b8:b1",
-                    "name": "s1-eth1",
-                    "nni": false,
-                    "port_number": 1,
-                    "speed": "10 Gbps",
-                    "switch": "00:00:00:00:00:00:00:01",
-                    "type": "interface",
-                    "uni": true
-                },
-                "00:00:00:00:00:00:00:01:2": {
-                    "id": "00:00:00:00:00:00:00:01:2",
-                    "mac": "de:19:a1:63:d1:5a",
-                    "name": "s1-eth2",
-                    "nni": true,
-                    "port_number": 2,
-                    "speed": "10 Gbps",
-                    "switch": "00:00:00:00:00:00:00:01",
-                    "type": "interface",
-                    "uni": false
-                },
-                "00:00:00:00:00:00:00:01:65534": {
-                    "id": "00:00:00:00:00:00:00:01:65534",
-                    "mac": "9e:fb:8d:e0:c2:40",
-                    "name": "s1",
-                    "nni": false,
-                    "port_number": 65534,
-                    "speed": "",
-                    "switch": "00:00:00:00:00:00:00:01",
-                    "type": "interface",
-                    "uni": true
-                }
-            },
-            "manufacturer": "",
-            "name": "00:00:00:00:00:00:00:01",
-            "ofp_version": "0x01",
-            "serial": "",
-            "software": null,
-            "type": "switch"
-        },
-        "00:00:00:00:00:01": {
-            "mac": "00:00:00:00:00:01",
-            "type": "host"
-        }
-      }
-
-# Exemples here
-definitions:
-  examples:
-    ListofCircuits:
-      - {
-          "name": "link-brazil-miami",
-          "hops": [
-              "1:1",
-              "1:2",
-              "2:1",
-              "2:2"
-              ]
-        }
+        active:
+          type: boolean
+          description: Link is active or not
+          example: false
+        enabled:
+          type: boolean
+          description: Link is enabled or not
+          example: true
+        endpoint_a:
+          $ref: '#/components/schemas/Interface'
+        endpoint_b:
+          $ref: '#/components/schemas/Interface'        
