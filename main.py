@@ -6,6 +6,8 @@ from flask import jsonify, request
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
 from kytos.core.link import Link
+from kytos.core.switch import Switch
+from kytos.core.interface import Interface
 
 # from napps.kytos.topology import settings
 from napps.kytos.topology.models import Topology
@@ -104,22 +106,25 @@ class Main(KytosNApp):
         """Add metadata to a switch."""
         metadata = request.get_json()
         try:
-            self.controller.switches[dpid].extend_metadata(metadata)
-            return jsonify("Operation successful"), 201
+            switch = self.controller.switches[dpid]
         except KeyError:
             return jsonify("Switch not found"), 404
+
+        switch.extend_metadata(metadata)
+        self.notify_metadata_changes(switch, 'added')
+        return jsonify("Operation successful"), 201
 
     @rest('v3/switches/<dpid>/metadata/<key>', methods=['DELETE'])
     def delete_switch_metadata(self, dpid, key):
         """Delete metadata from a switch."""
         try:
-            status = self.controller.switches[dpid].remove_metadata(key)
+            switch = self.controller.switches[dpid]
         except KeyError:
             return jsonify("Switch not found"), 404
 
-        if status:
-            return jsonify("Operation successful"), 200
-        return jsonify("Metadata not found"), 404
+        switch.remove_metadata(key)
+        self.notify_metadata_changes(switch,'removed')
+        return jsonify("Operation successful"), 200
 
     # Interface related methods
     @rest('v3/interfaces')
@@ -204,6 +209,7 @@ class Main(KytosNApp):
             return jsonify("Interface not found"), 404
 
         interface.extend_metadata(metadata)
+        self.notify_metadata_changes(interface, 'added')
         return jsonify("Operation successful"), 201
 
     @rest('v3/interfaces/<interface_id>/metadata/<key>', methods=['DELETE'])
@@ -211,6 +217,7 @@ class Main(KytosNApp):
         """Delete metadata from an interface."""
         switch_id = ":".join(interface_id.split(":")[:-1])
         interface_number = int(interface_id.split(":")[-1])
+
         try:
             switch = self.controller.switches[switch_id]
         except KeyError:
@@ -221,10 +228,11 @@ class Main(KytosNApp):
         except KeyError:
             return jsonify("Interface not found"), 404
 
-        status = interface.remove_metadata(key)
-        if status:
-            return jsonify("Operation successful"), 200
-        return jsonify("Metadata not found"), 404
+        if interface.remove_metadata(key) is False:
+            return jsonify("Metadata not found"), 404
+
+        self.notify_metadata_changes(interface, 'removed')
+        return jsonify("Operation successful"), 200
 
     # Link related methods
     @rest('v3/links')
@@ -268,22 +276,27 @@ class Main(KytosNApp):
         """Add metadata to a link."""
         metadata = request.get_json()
         try:
-            self.links[link_id].extend_metadata(metadata)
-            return jsonify("Operation successful"), 201
+            link = self.links[link_id]
         except KeyError:
             return jsonify("Link not found"), 404
+
+        link.extend_metadata(metadata)
+        self.notify_metadata_changes(link, 'added')
+        return jsonify("Operation successful"), 201
 
     @rest('v3/links/<link_id>/metadata/<key>', methods=['DELETE'])
     def delete_link_metadata(self, link_id, key):
         """Delete metadata from a link."""
         try:
-            status = self.links[link_id].remove_metadata(key)
+            status = self.links[link_id]
         except KeyError:
             return jsonify("Link not found"), 404
 
-        if status:
-            return jsonify("Operation successful"), 200
-        return jsonify("Metadata not found"), 404
+        if link.remove_metadata(key) is False:
+            return jsonify("Metadata not found"), 404
+
+        self.notify_metadata_changes(link, 'removed')
+        return jsonify("Operation successful"), 200
 
     @listen_to('.*.switch.(new|reconnected)')
     def handle_new_switch(self, event):
@@ -401,3 +414,21 @@ class Main(KytosNApp):
         event = KytosEvent(name=name, content={'topology':
                                                self._get_topology()})
         self.controller.buffers.app.put(event)
+
+    def notify_metadata_changes(self, obj, action):
+        """Send an event to notify about metadata changes."""
+        if isinstance(obj, Switch):
+            entity = 'switch'
+            entities = 'switches'
+        elif isinstance(obj, Interface):
+            entity = 'interface'
+            entities = 'interfaces'
+        elif isinstance(obj, Link):
+            entity = 'link'
+            entities = 'links'
+
+        name = f'kytos/topology.{entities}.metadata.{action}'
+        event = KytosEvent(name=name, content={entity: obj,
+                                               'metadata': obj.metadata})
+        self.controller.buffers.app.put(event)
+        log.info(f'Metadata from {obj.id} was {action}.')
