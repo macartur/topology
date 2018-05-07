@@ -5,9 +5,9 @@ Manage the network topology
 from flask import jsonify, request
 from kytos.core import KytosEvent, KytosNApp, log, rest
 from kytos.core.helpers import listen_to
+from kytos.core.interface import Interface
 from kytos.core.link import Link
 from kytos.core.switch import Switch
-from kytos.core.interface import Interface
 
 # from napps.kytos.topology import settings
 from napps.kytos.topology.models import Topology
@@ -22,6 +22,11 @@ class Main(KytosNApp):
     def setup(self):
         """Initialize the NApp's links list."""
         self.links = {}
+        self.store_items = {}
+
+        self.verify_storehouse('switches')
+        self.verify_storehouse('interfaces')
+        self.verify_storehouse('links')
 
     def execute(self):
         """Do nothing."""
@@ -309,6 +314,7 @@ class Main(KytosNApp):
         switch.activate()
         log.debug('Switch %s added to the Topology.', switch.id)
         self.notify_topology_update()
+        self.update_instance_metadata(switch)
 
     @listen_to('.*.connection.lost')
     def handle_connection_lost(self, event):
@@ -332,6 +338,7 @@ class Main(KytosNApp):
         interface = event.content['interface']
         interface.activate()
         self.notify_topology_update()
+        self.update_instance_metadata(interface)
 
     @listen_to('.*.switch.interface.created')
     def handle_interface_created(self, event):
@@ -364,6 +371,7 @@ class Main(KytosNApp):
         if interface.link:
             interface.link.activate()
         self.notify_topology_update()
+        self.update_instance_metadata(link)
 
     @listen_to('.*.switch.interface.link_down')
     def handle_interface_link_down(self, event):
@@ -431,4 +439,95 @@ class Main(KytosNApp):
         event = KytosEvent(name=name, content={entity: obj,
                                                'metadata': obj.metadata})
         self.controller.buffers.app.put(event)
-        log.info(f'Metadata from {obj.id} was {action}.')
+        log.debug(f'Metadata from {obj.id} was {action}.')
+
+    @listen_to('kytos/topology.*.metadata.*')
+    def save_metadata_on_store(self, event):
+        """Send to storehouse the data updated."""
+        name = 'kytos.storehouse.update'
+        if 'switch' in event.content:
+            store = self.store_items.get('switches')
+            obj = event.content.get('switch')
+            namespace = 'kytos.topology.switches.metadata'
+        elif 'interface' in event.content:
+            store = self.store_items.get('interfaces')
+            obj = event.content.get('interface')
+            namespace = 'kytos.topology.iterfaces.metadata'
+        elif 'link' in event.content:
+            store = self.store_items.get('links')
+            obj = event.content.get('link')
+            namespace = 'kytos.topology.links.metadata'
+
+        store.data[obj.id] = obj.metadata
+        content = {'namespace': namespace,
+                   'box_id': store.box_id,
+                   'data': store.data,
+                   'callback': self.update_instance}
+
+        event = KytosEvent(name=name, content=content)
+        self.controller.buffers.app.put(event)
+
+    def update_instance(self, event, data, error):
+        """Display in Kytos console if the data was updated."""
+        entities = event.content.get('namespace', '').split('.')[-2]
+        if error:
+            log.error(f'Error trying to update storehouse {entities}.')
+        else:
+            log.debug(f'Storehouse update to entities: {entities}.')
+
+    def verify_storehouse(self, entities):
+        """Request a list of box saved by specific entity."""
+        name = 'kytos.storehouse.list'
+        content = {'namespace': f'kytos.topology.{entities}.metadata',
+                   'callback': self.request_retrieve_entities}
+        event = KytosEvent(name=name, content=content)
+        self.controller.buffers.app.put(event)
+        log.info(f'verify data in storehouse for {entities}.')
+
+    def request_retrieve_entities(self, event, data, error):
+        """Create a box or retrieve an existent box from storehouse."""
+        msg = ''
+        content = {'namespace': event.content.get('namespace'),
+                   'callback': self.load_from_store,
+                   'data': {}}
+
+        if len(data) == 0:
+            name = 'kytos.storehouse.create'
+            msg = 'Create new box in storehouse'
+        else:
+            name = 'kytos.storehouse.retrieve'
+            content['box_id'] = data[0]
+            msg = 'Retrieve data from storeohouse.'
+
+        event = KytosEvent(name=name, content=content)
+        self.controller.buffers.app.put(event)
+        log.debug(msg)
+
+    def load_from_store(self, event, box, error):
+        """Save the data retrived from storehouse."""
+        entities = event.content.get('namespace', '').split('.')[-2]
+        if error:
+            log.error('Error while get a box from storehouse.')
+        else:
+            self.store_items[entities] = box
+            log.debug('Data updated')
+
+    def update_instance_metadata(self, obj):
+        """Update object instance with saved metadata."""
+        metadata = None
+        if isinstance(obj, Interface):
+            all_metadata = self.store_items.get('interfaces', None)
+            if all_metadata:
+                metadata = all_metadata.data.get(obj.id)
+        elif isinstance(obj, Switch):
+            all_metadata = self.store_items.get('switches', None)
+            if all_metadata:
+                metadata = all_metadata.data.get(obj.id)
+        elif isinstance(obj, Link):
+            all_metadata = self.store_items.get('links', None)
+            if all_metadata:
+                metadata = all_metadata.data.get(obj.id)
+
+        if metadata:
+            obj.extend_metadata(metadata)
+            log.debug(f'Metadata to {obj.id} was updated')

@@ -4,7 +4,7 @@
   "name": "topology",
   "description": "Manage the network topology.",
   "version": "3.1.0",
-  "napp_dependencies": ["kytos/of_core", "kytos/of_lldp"],
+  "napp_dependencies": ["kytos/of_core", "kytos/of_lldp", "kytos/storehouse"],
   "license": "MIT",
   "tags": ["topology", "rest", "work-in-progress"],
   "url": "https://github.com/kytos/topology"
