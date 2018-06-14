@@ -306,7 +306,7 @@ class Main(KytosNApp):
         this new device.
         """
         switch = event.content['switch']
-        switch.active = True
+        switch.activate()
         log.debug('Switch %s added to the Topology.', switch.id)
         self.notify_topology_update()
 
@@ -319,7 +319,7 @@ class Main(KytosNApp):
         """
         switch = event.content['source'].switch
         if switch:
-            switch.active = False
+            switch.deactivate()
             log.debug('Switch %s removed from the Topology.', switch.id)
             self.notify_topology_update()
 
@@ -330,7 +330,7 @@ class Main(KytosNApp):
         The event notifies that an interface was changed to 'up'.
         """
         interface = event.content['interface']
-        interface.active = True
+        interface.activate()
         self.notify_topology_update()
 
     @listen_to('.*.switch.interface.created')
@@ -345,7 +345,7 @@ class Main(KytosNApp):
         The event notifies that an interface was changed to 'down'.
         """
         interface = event.content['interface']
-        interface.active = False
+        interface.deactivate()
         self.handle_interface_link_down(event)
         self.notify_topology_update()
 
@@ -362,7 +362,7 @@ class Main(KytosNApp):
         """
         interface = event.content['interface']
         if interface.link:
-            interface.link.active = True
+            interface.link.activate()
         self.notify_topology_update()
 
     @listen_to('.*.switch.interface.link_down')
@@ -373,7 +373,7 @@ class Main(KytosNApp):
         """
         interface = event.content['interface']
         if interface.link:
-            interface.link.active = False
+            interface.link.deactivate()
         self.notify_topology_update()
 
     @listen_to('.*.interface.is.nni')
