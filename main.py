@@ -128,7 +128,7 @@ class Main(KytosNApp):
             return jsonify("Switch not found"), 404
 
         switch.remove_metadata(key)
-        self.notify_metadata_changes(switch,'removed')
+        self.notify_metadata_changes(switch, 'removed')
         return jsonify("Operation successful"), 200
 
     # Interface related methods
@@ -293,7 +293,7 @@ class Main(KytosNApp):
     def delete_link_metadata(self, link_id, key):
         """Delete metadata from a link."""
         try:
-            status = self.links[link_id]
+            link = self.links[link_id]
         except KeyError:
             return jsonify("Link not found"), 404
 
@@ -371,7 +371,7 @@ class Main(KytosNApp):
         if interface.link:
             interface.link.activate()
         self.notify_topology_update()
-        self.update_instance_metadata(link)
+        self.update_instance_metadata(interface.link)
 
     @listen_to('.*.switch.interface.link_down')
     def handle_interface_link_down(self, event):
