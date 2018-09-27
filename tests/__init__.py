@@ -1,4 +1,4 @@
-"""Module to test the napp kytos/status."""
+"""Module to test the napp kytos/topology."""
 import sys
 import os
 from pathlib import Path

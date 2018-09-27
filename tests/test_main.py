@@ -49,7 +49,7 @@ class TestMain(TestCase):
          ({'interface_id': '[interface_id]'}, {'POST', 'OPTIONS'},
           '/api/kytos/topology/v3/interfaces/<interface_id>/metadata'),
          ({'interface_id': '[interface_id]'}, {'GET', 'OPTIONS', 'HEAD'},
-           '/api/kytos/topology/v3/interfaces/<interface_id>/metadata'),
+          '/api/kytos/topology/v3/interfaces/<interface_id>/metadata'),
          ({'interface_id': '[interface_id]'}, {'POST', 'OPTIONS'},
           '/api/kytos/topology/v3/interfaces/<interface_id>/disable'),
          ({'interface_id': '[interface_id]'}, {'POST', 'OPTIONS'},
